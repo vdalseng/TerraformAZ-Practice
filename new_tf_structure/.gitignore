@@ -1,3 +1,6 @@
+subscription.tf
+
+
 # Local .terraform directories
 **/.terraform/*
 
