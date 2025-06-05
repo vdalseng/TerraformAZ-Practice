@@ -13,7 +13,7 @@ tags = {
 }
 
 # Storage Account Configuration
-storage_account_name     = "vhdstorageaccount001"
+storage_account_name     = "vhdstorageaccount"
 account_tier             = "Standard"
 account_replication_type = "LRS"
 
@@ -31,3 +31,21 @@ storage_permissions   = [ "Get" ]
 
 # Key Vault Secret Configuration
 key_vault_secret_name = "vhd-storage-account-key"
+
+# Networking Configuration
+
+#Network Security Group Configuration
+network_security_group_name = "vhd-net-sec-group"
+
+# Virtual Network Configuration
+virtual_network_name = "vhd-vnet"
+
+address_space = ["10.133.99.0/24"]
+
+# Subnet Configuration
+subnet_name = "vhd-subnet"
+subnet_address_prefix = "10.133.99.0/24"
+
+# Service Endpoints Configuration
+service_endpoints = ["Microsoft.Storage"]
+

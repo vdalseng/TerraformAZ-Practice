@@ -39,3 +39,34 @@ module "key-vault" {
 
     key_vault_secret_name           = var.key_vault_secret_name
 }
+
+module "network-security-group" {
+    source              = "./modules/networking/network-security-group"
+    
+    network_security_group_name     = var.network_security_group_name
+    location                        = module.resource-group.location
+    resource_group_name             = module.resource-group.resource_group_name
+}
+
+module "virtual-network" {
+    source              = "./modules/networking/virtual-network"
+    
+    virtual_network_name        = var.virtual_network_name
+    location                    = module.resource-group.location
+    resource_group_name         = module.resource-group.resource_group_name
+    address_space               = var.address_space
+    network_security_group_id   = module.network-security-group.network_security_group_id
+    tags                        = var.tags
+}
+
+module "subnet" {
+    source              = "./modules/networking/subnet"
+    
+    subnet_name                 = var.subnet_name
+    resource_group_name         = module.resource-group.resource_group_name
+    virtual_network_name        = module.virtual-network.virtual_network_name
+    address_prefix              = var.subnet_address_prefix
+    service_endpoints           = var.service_endpoints
+    network_security_group_id   = module.network-security-group.network_security_group_id
+}
+

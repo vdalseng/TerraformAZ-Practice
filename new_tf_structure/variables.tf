@@ -84,3 +84,40 @@ variable "key_vault_secret_name" {
     description = "The name of the Key Vault secret."
     type        = string
 }
+
+variable "network_security_group_name" {
+    description = "The name of the Network Security Group."
+    type        = string
+}
+
+variable "virtual_network_name" {
+    description = "The name of the Virtual Network."
+    type        = string
+}
+
+variable "address_space" {
+    description = "The address space for the Virtual Network in CIDR notation."
+    type        = list(string)
+}
+
+variable "dns_servers" {
+    description = "A list of DNS server IP addresses for the Virtual Network."
+    type        = list(string)
+    default     = []
+}
+
+variable "subnet_name" {
+    description = "The name of the subnet."
+    type        = string
+}
+
+variable "subnet_address_prefix" {
+    description = "The address prefix for the subnet in CIDR notation."
+    type        = string
+}
+
+variable "service_endpoints" {
+    description = "A list of service endpoints to enable for the subnet."
+    type        = list(string)
+    default     = []
+}
