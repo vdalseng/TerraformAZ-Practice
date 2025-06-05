@@ -116,6 +116,11 @@ variable "subnet_address_prefix" {
     type        = string
 }
 
+variable "bastion_subnet_address_prefix" {
+    description = "The address prefix for the bastion subnet in CIDR notation."
+    type        = string
+}
+
 variable "service_endpoints" {
     description = "A list of service endpoints to enable for the subnet."
     type        = list(string)

@@ -40,11 +40,12 @@ network_security_group_name = "vhd-net-sec-group"
 # Virtual Network Configuration
 virtual_network_name = "vhd-vnet"
 
-address_space = ["10.133.99.0/24"]
+address_space = ["10.133.99.0/16"]
 
 # Subnet Configuration
 subnet_name = "vhd-subnet"
 subnet_address_prefix = "10.133.99.0/24"
+bastion_subnet_address_prefix = "10.133.99.0/24" # pass this to a subnet module for bastion host
 
 # Service Endpoints Configuration
 service_endpoints = ["Microsoft.Storage"]

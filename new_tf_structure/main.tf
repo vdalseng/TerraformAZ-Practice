@@ -62,11 +62,12 @@ module "virtual-network" {
 module "subnet" {
     source              = "./modules/networking/subnet"
     
-    subnet_name                 = var.subnet_name
-    resource_group_name         = module.resource-group.resource_group_name
-    virtual_network_name        = module.virtual-network.virtual_network_name
-    address_prefix              = var.subnet_address_prefix
-    service_endpoints           = var.service_endpoints
-    network_security_group_id   = module.network-security-group.network_security_group_id
+    subnet_name                     = var.subnet_name
+    resource_group_name             = module.resource-group.resource_group_name
+    virtual_network_name            = module.virtual-network.virtual_network_name
+    address_prefix                  = var.subnet_address_prefix
+    bastion_subnet_address_prefix   = var.bastion_subnet_address_prefix
+    service_endpoints               = var.service_endpoints
+    network_security_group_id       = module.network-security-group.network_security_group_id
 }
 
