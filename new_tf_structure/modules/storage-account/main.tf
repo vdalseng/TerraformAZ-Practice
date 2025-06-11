@@ -12,3 +12,9 @@ resource "azurerm_storage_account" "storage_account" {
       ip_rules          = []
     }
 }
+
+resource "azurerm_storage_container" "tfstate" {
+    name                  = "tfstate"
+    storage_account_id    = azurerm_storage_account.storage_account.id
+    container_access_type = "private"
+}
