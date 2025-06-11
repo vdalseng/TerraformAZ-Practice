@@ -68,7 +68,7 @@ private_ip_address_allocation = "Dynamic"
 
 # Virtual Machine Configuration
 vm_name = "vhd-vm"
-vm_size = "Standard_B2s"  # More widely available (2 vCPU, 4GB RAM)
+vm_size = "Standard_A2_v2"
 admin_username = "Azureadmin"
 admin_password = "Azureadmin!"  # Change this in production
 

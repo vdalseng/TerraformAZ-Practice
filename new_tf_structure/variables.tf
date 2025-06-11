@@ -193,7 +193,7 @@ variable "vm_name" {
 variable "vm_size" {
     description = "The size of the virtual machine."
     type        = string
-    default     = "Standard_B1ms"  # Cheapest Windows-compatible VM (2GB RAM)
+    default     = "Standard_A2_v2"
 }
 
 variable "image_publisher" {
@@ -211,7 +211,7 @@ variable "image_offer" {
 variable "image_sku" {
     description = "The SKU of the VM image."
     type        = string
-    default     = "2022-datacenter-core"
+    default     = "2022-datacenter-core"  # Gen 1 compatible with Standard_A2_v2
 }
 
 variable "image_version" {
