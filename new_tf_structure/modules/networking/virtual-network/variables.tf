@@ -23,14 +23,19 @@ variable "address_space" {
   type        = list(string)
 }
 
-variable "dns_servers" {
-  description = "A list of DNS server IP addresses for the virtual network."
-  type        = list(string)
-  default     = []
-}
+# variable "dns_servers" {
+#   description = "A list of DNS server IP addresses for the virtual network."
+#   type        = list(string)
+#   default     = []
+# }
 
 variable "tags" {
   description = "A map of tags to assign to the virtual network."
   type        = map(string)
   default     = {}
+}
+
+variable "bastion_subnet_id" {
+  description = "The subnet configuration for the Bastion host."
+  type        = string
 }

@@ -6,4 +6,9 @@ resource "azurerm_storage_account" "storage_account" {
     account_replication_type = var.account_replication_type
     
     tags = var.tags
+
+    network_rules {
+      default_action    = "Deny"
+      ip_rules          = []
+    }
 }

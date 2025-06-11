@@ -21,3 +21,8 @@ output "service_endpoints" {
     description = "The service endpoints configured for the subnet"
     value       = azurerm_subnet.subnet.service_endpoints
 }
+
+output "bastion_subnet_id" {
+    description = "The ID of the bastion subnet"
+    value       = azurerm_subnet.bastion_subnet.id
+}

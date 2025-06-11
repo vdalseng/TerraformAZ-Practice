@@ -13,7 +13,7 @@ tags = {
 }
 
 # Storage Account Configuration
-storage_account_name     = "vhdstorageaccount"
+storage_account_name     = "vhdstracc"
 account_tier             = "Standard"
 account_replication_type = "LRS"
 
@@ -40,13 +40,40 @@ network_security_group_name = "vhd-net-sec-group"
 # Virtual Network Configuration
 virtual_network_name = "vhd-vnet"
 
-address_space = ["10.133.99.0/16"]
+address_space = ["10.133.99.0/24"]
 
 # Subnet Configuration
 subnet_name = "vhd-subnet"
-subnet_address_prefix = "10.133.99.0/24"
-bastion_subnet_address_prefix = "10.133.99.0/24" # pass this to a subnet module for bastion host
+subnet_address_prefix = "10.133.99.0/25"
+bastion_subnet_address_prefix = "10.133.99.128/25"
 
 # Service Endpoints Configuration
 service_endpoints = ["Microsoft.Storage"]
 
+# DNS Zone Configuration
+service_type = "blob"
+azure_environment = "core.windows.net"
+
+# Private Endpoint Configuration
+private_endpoint_name = "vhd-storage-private-endpoint"
+private_service_connection_name = "vhd-storage-connection"
+subresource_names = ["blob"]
+dns_zone_group_name = "storage-account"
+
+# Network Interface Configuration
+network_interface_name = "vhd-vm-nic"
+private_ip_address_allocation = "Dynamic"
+# private_ip_address = null  # Only set if using Static allocation
+# public_ip_address_id = null  # Set if you want to attach a public IP
+
+# Virtual Machine Configuration
+vm_name = "vhd-vm"
+vm_size = "Standard_B2s"  # More widely available (2 vCPU, 4GB RAM)
+admin_username = "Azureadmin"
+admin_password = "Azureadmin!"  # Change this in production
+
+# Azure Spot VM Configuration for Maximum Cost Savings (Testing Only)
+# WARNING: Spot VMs can be evicted with 30 seconds notice when Azure needs capacity
+priority = "Spot"          # Enable Spot VM for up to 90% cost savings
+eviction_policy = "Deallocate"  # Deallocate (preserves data) vs Delete
+max_bid_price = -1         # Pay current spot price (up to regular price)
