@@ -15,9 +15,6 @@ resource "azurerm_windows_virtual_machine" "vm" {
     # Windows-specific configuration
     provision_vm_agent         = true
 
-    # Boot diagnostics disabled to save storage costs
-    boot_diagnostics {}
-
     # OS disk configuration - cheapest options
     os_disk {
         name                 = "${var.vm_name}-osdisk"

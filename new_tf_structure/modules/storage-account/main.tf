@@ -8,8 +8,9 @@ resource "azurerm_storage_account" "storage_account" {
     tags = var.tags
 
     network_rules {
-      default_action    = "Deny"
-      ip_rules          = []
+      default_action             = "Deny"
+      virtual_network_subnet_ids = var.allowed_subnet_ids
+      bypass                     = ["AzureServices"]
     }
 }
 

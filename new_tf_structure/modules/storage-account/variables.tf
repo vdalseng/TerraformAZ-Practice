@@ -29,3 +29,9 @@ variable tags {
     description = "A map of tags to assign to the resource group."
     type        = map(string)
 }
+
+variable "allowed_subnet_ids" {
+    description = "List of subnet IDs that should have access to the storage account"
+    type        = list(string)
+    default     = []
+}

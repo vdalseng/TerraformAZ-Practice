@@ -211,7 +211,7 @@ variable "image_offer" {
 variable "image_sku" {
     description = "The SKU of the VM image."
     type        = string
-    default     = "2022-datacenter-core"  # Gen 1 compatible with Standard_A2_v2
+    default     = "2022-datacenter-smalldisk"  # Gen 1 compatible with Standard_A2_v2
 }
 
 variable "image_version" {
