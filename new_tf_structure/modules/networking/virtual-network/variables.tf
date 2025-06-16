@@ -39,3 +39,15 @@ variable "bastion_subnet_id" {
   description = "The subnet configuration for the Bastion host."
   type        = string
 }
+
+variable "sku" {
+  description = "The SKU for the virtual network."
+  type        = string
+  default     = "Standard"
+}
+
+variable "allocation_method" {
+  description = "The allocation method for the public IP address."
+  type        = string
+  default     = "Dynamic"
+}

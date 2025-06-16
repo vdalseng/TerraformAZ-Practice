@@ -5,7 +5,7 @@ resource "azurerm_subnet" "subnet" {
     address_prefixes        = [var.address_prefix]
 
     # Service Endpoints
-    service_endpoints                               = var.service_endpoints
+    # service_endpoints                               = var.service_endpoints
     
     # Private Endpoint Network Policies - Required for private endpoints
     private_endpoint_network_policies               = "Disabled"
