@@ -11,8 +11,8 @@ resource "azurerm_private_endpoint" "private_endpoint" {
         is_manual_connection                = false
     }
 
-    private_dns_zone_group {
-        name                    = "dns-${var.dns_zone_group_name}"
-        private_dns_zone_ids    = var.private_dns_zone_ids
-    }
+    # private_dns_zone_group {
+    #     name                    = "dns-${var.dns_zone_group_name}"
+    #     private_dns_zone_ids    = var.private_dns_zone_ids
+    # }
 }

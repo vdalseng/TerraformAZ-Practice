@@ -30,8 +30,7 @@ variable tags {
     type        = map(string)
 }
 
-variable "allowed_subnet_ids" {
-    description = "List of subnet IDs that should have access to the storage account"
-    type        = list(string)
-    default     = []
+variable "subnet_id" {
+    description = "The ID of the subnet to associate with the storage account."
+    type        = string
 }

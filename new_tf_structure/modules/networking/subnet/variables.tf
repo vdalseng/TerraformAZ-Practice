@@ -22,14 +22,3 @@ variable "bastion_subnet_address_prefix" {
     description = "The address prefix for the bastion subnet."
     type        = string
 }
-
-variable "service_endpoints" {
-    description = "A list of service endpoints to enable for the subnet."
-    type        = list(string)
-    default     = []
-}
-
-variable "network_security_group_id" {
-    description = "The ID of the network security group to associate with the subnet."
-    type        = string
-}

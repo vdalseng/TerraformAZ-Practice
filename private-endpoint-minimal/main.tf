@@ -1,7 +1,3 @@
-
-
-
-
 resource "azurerm_private_endpoint" "private_endpoint" {
     name                        = var.name
     location                    = var.location

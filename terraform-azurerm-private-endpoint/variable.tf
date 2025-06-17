@@ -1,10 +1,5 @@
 variable "resource_name" {
-    description = "The name of the resource group."
-    type        = string
-}
-
-variable "resource_id" {
-    description = "The ID of the resource to which the private endpoint will connect"
+    description = "The name of the resource"
     type        = string
 }
 
@@ -18,13 +13,18 @@ variable "resource_group_location" {
     type        = string
 }
 
+variable "resource_id" {
+    description = "The ID of the resource to which the private endpoint will connect"
+    type        = string
+}
+
 variable "subresource_name" {
     description = "The name of the sub-resource (e.g., 'blob', 'queue', 'table')"
-    type        = list(string)
-    default     = ["blob"]
+    type        = string
+    default     = "blob"
 
     validation {
-        condition       = contains(["blob", "queue", "table", "file", "sql", "cosmosdb", "keyvault", "redis", var.sub_resource_name])
+        condition       = contains(["blob", "queue", "table", "file", "sql", "cosmosdb", "keyvault", "redis", var.subresource_name])
         error_message   = "subresource_names must either 'blob', 'queue', 'table', 'file', 'sql', 'cosmosdb', 'keyvault', or 'redis'."
   }
 }

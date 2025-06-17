@@ -33,15 +33,15 @@ variable "subresource_names" {
     type        = list(string)
 }
 
-variable "dns_zone_group_name" {
-    description = "The name of the DNS zone group for the private endpoint."
-    type        = string
-}
+# variable "dns_zone_group_name" {
+#     description = "The name of the DNS zone group for the private endpoint."
+#     type        = string
+# }
 
-variable "private_dns_zone_ids" {
-    description = "The IDs of the private DNS zones to associate with the private endpoint."
-    type        = list(string)
-}
+# variable "private_dns_zone_ids" {
+#     description = "The IDs of the private DNS zones to associate with the private endpoint."
+#     type        = list(string)
+# }
 
 variable "tags" {
     description = "Tags to be applied to the private endpoint."

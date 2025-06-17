@@ -7,13 +7,13 @@ resource "azurerm_storage_account" "storage_account" {
 
     public_network_access_enabled = false
     
+    network_rules {
+        default_action             = "Deny"
+        bypass                     = ["AzureServices"]
+        ip_rules                   = ["188.95.241.183"]
+    }
+    
     tags = var.tags
-
-    # network_rules {
-    #   default_action             = "Deny"
-    #   virtual_network_subnet_ids = var.allowed_subnet_ids
-    #   bypass                     = ["AzureServices"]
-    # }
 }
 
 resource "azurerm_storage_container" "tfstate" {

@@ -6,13 +6,13 @@ module "resource-group" {
     tags                = var.tags
 }
 
-module "network-security-group" {
-    source              = "./modules/networking/network-security-group"
+# module "network-security-group" {
+#     source              = "./modules/networking/network-security-group"
     
-    network_security_group_name     = var.network_security_group_name
-    location                        = module.resource-group.location
-    resource_group_name             = module.resource-group.resource_group_name
-}
+#     network_security_group_name     = var.network_security_group_name
+#     location                        = module.resource-group.location
+#     resource_group_name             = module.resource-group.resource_group_name
+# }
 
 module "virtual-network" {
     source              = "./modules/networking/virtual-network"
@@ -20,7 +20,6 @@ module "virtual-network" {
     virtual_network_name        = var.virtual_network_name
     location                    = module.resource-group.location
     resource_group_name         = module.resource-group.resource_group_name
-    network_security_group_id   = module.network-security-group.network_security_group_id
     address_space               = var.address_space
     tags                        = var.tags
 
@@ -35,8 +34,6 @@ module "subnet" {
     virtual_network_name            = module.virtual-network.virtual_network_name
     address_prefix                  = var.subnet_address_prefix
     bastion_subnet_address_prefix   = var.bastion_subnet_address_prefix
-    service_endpoints               = var.service_endpoints
-    network_security_group_id       = module.network-security-group.network_security_group_id
 }
 
 module "storage-account" {
@@ -47,42 +44,42 @@ module "storage-account" {
     storage_account_name        = var.storage_account_name
     account_tier                = var.account_tier
     account_replication_type    = var.account_replication_type
-    allowed_subnet_ids          = [module.subnet.subnet_id]
     tags                        = var.tags
+    subnet_id                   = module.subnet.subnet_id
 }
 
-module "key-vault" {
-    for_each                        = toset(var.environments)
-    source                          = "./modules/key-vault"
+# module "key-vault" {
+#     for_each                        = toset(var.environments)
+#     source                          = "./modules/key-vault"
     
-    resource_group_name             = module.resource-group.resource_group_name
-    location                        = module.resource-group.location
-    key_vault_name                  = var.key_vault_name
-    sku_name                        = var.sku_name
-    tags                            = var.tags
+#     resource_group_name             = module.resource-group.resource_group_name
+#     location                        = module.resource-group.location
+#     key_vault_name                  = var.key_vault_name
+#     sku_name                        = var.sku_name
+#     tags                            = var.tags
     
-    tenant_id                       = data.azurerm_client_config.current.tenant_id
-    enabled_for_disk_encryption     = var.enabled_for_disk_encryption
-    soft_delete_retention_days      = var.soft_delete_retention_days
-    purge_protection_enabled        = var.purge_protection_enabled
-    object_id                       = data.azurerm_client_config.current.object_id
-    environments                    = [each.value]
-    key_permissions                 = var.key_permissions
-    secret_permissions              = var.secret_permissions
-    storage_permissions             = var.storage_permissions
+#     tenant_id                       = data.azurerm_client_config.current.tenant_id
+#     enabled_for_disk_encryption     = var.enabled_for_disk_encryption
+#     soft_delete_retention_days      = var.soft_delete_retention_days
+#     purge_protection_enabled        = var.purge_protection_enabled
+#     object_id                       = data.azurerm_client_config.current.object_id
+#     environments                    = [each.value]
+#     key_permissions                 = var.key_permissions
+#     secret_permissions              = var.secret_permissions
+#     storage_permissions             = var.storage_permissions
 
-    key_vault_secret_name           = var.key_vault_secret_name
-}
+#     key_vault_secret_name           = var.key_vault_secret_name
+# }
 
-module "dns" {
-    source                  = "./modules/networking/dns"
+# module "dns" {
+#     source                  = "./modules/networking/dns"
     
-    resource_group_name     = module.resource-group.resource_group_name
-    virtual_network_id      = module.virtual-network.virtual_network_id
-    service_type            = var.service_type
-    azure_environment       = var.azure_environment
-    tags                    = var.tags
-}
+#     resource_group_name     = module.resource-group.resource_group_name
+#     virtual_network_id      = module.virtual-network.virtual_network_id
+#     service_type            = var.service_type
+#     azure_environment       = var.azure_environment
+#     tags                    = var.tags
+# }
 
 module "private-endpoint" {
     source                          = "./modules/private-endpoint"
@@ -94,8 +91,8 @@ module "private-endpoint" {
     private_service_connection_name = var.private_service_connection_name
     private_connection_resource_id  = module.storage-account.storage_account_id
     subresource_names              = var.subresource_names
-    dns_zone_group_name            = var.dns_zone_group_name
-    private_dns_zone_ids           = [module.dns.private_dns_zone_id]
+    # dns_zone_group_name            = var.dns_zone_group_name
+    # private_dns_zone_ids           = [module.dns.private_dns_zone_id]
     tags                           = var.tags
 }
 

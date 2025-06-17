@@ -13,11 +13,6 @@ variable "resource_group_name" {
   type        = string
 }
 
-variable "network_security_group_id" {
-  description = "The ID of the network security group to associate with the virtual network."
-  type        = string
-}
-
 variable "address_space" {
   description = "The address space for the virtual network in CIDR notation."
   type        = list(string)
@@ -49,5 +44,5 @@ variable "sku" {
 variable "allocation_method" {
   description = "The allocation method for the public IP address."
   type        = string
-  default     = "Dynamic"
+  default     = "Static"
 }
