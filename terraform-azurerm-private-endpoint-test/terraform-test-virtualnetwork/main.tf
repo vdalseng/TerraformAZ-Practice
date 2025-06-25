@@ -89,7 +89,6 @@ resource "azurerm_network_interface" "nic" {
     }
 }
 
-
 resource "azurerm_windows_virtual_machine" "vm" {
     name                = "${var.resource_name}-vm"
     location            = azurerm_resource_group.resource_group.location
@@ -134,10 +133,6 @@ module "private_endpoint" {
     private_connection_resources = {
         "primary-storage" = {
             resource_id       = azurerm_storage_account.storage_account["primary"].id
-            subresource_names = ["blob"]
-        },
-        "remotestate-storage" = {
-            resource_id       = azurerm_storage_account.storage_account["remotestate"].id
             subresource_names = ["blob"]
         }
     }

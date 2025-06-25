@@ -91,7 +91,7 @@ variable "ddos_protection_plan_id" {
 variable "private_endpoint_configs" {
   description = "Map of private endpoint configurations. Key is used as identifier. Only essential inputs required - names and connections are auto-generated."
   type = map(object({
-    subnet_id           = string       # ID of the subnet where PE will be created
+    subnet_name         = string       # Name of the subnet where PE will be created
     resource_id         = string       # ID of the resource to connect to
     subresource_names   = list(string) # Subresource types (e.g., ["blob"], ["vault"])
     private_dns_zone_group = optional(object({
@@ -104,10 +104,21 @@ variable "private_endpoint_configs" {
 
 # VNet peering configuration - optional, only creates peering if provided
 variable "vnet_peering_config" {
-  description = "Optional VNet peering configuration. Creates a one-way peering FROM this VNet TO the remote VNet. The module will verify the target VNet exists first. For bidirectional connectivity, create the reverse peering from the remote VNet's module."
+  description = "Optional VNet peering configuration. Creates a one-way peering FROM this VNet TO the remote VNet. Only requires remote VNet name and resource group - the module will fetch the resource ID automatically."
   type = object({
-    virtual_network_name        = string
-    remote_virtual_network_id   = string
+    remote_vnet_name    = string # Name of the remote VNet to peer with
+    remote_rg_name      = string # Resource group containing the remote VNet
   })
   default = null
+}
+
+# Shared DNS zones configuration - for linking to externally managed DNS zones
+variable "shared_dns_zones" {
+  description = "Map of shared/external DNS zones to link this VNet to. Used for centralized DNS management across multiple VNets/regions."
+  type = map(object({
+    dns_zone_name       = string # Name of the existing DNS zone
+    dns_zone_rg_name    = string # Resource group containing the DNS zone
+    registration_enabled = bool   # Whether VMs in this VNet can register in the DNS zone
+  }))
+  default = {}
 }

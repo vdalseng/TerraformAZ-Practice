@@ -38,10 +38,9 @@ module "vnet_with_pe" {
     "app"           = "10.1.1.0/24"
     "private-links" = "10.1.2.0/24"
   }
-  
-  private_endpoint_configs = {
+    private_endpoint_configs = {
     "storage-blob" = {
-      subnet_id         = "10.1.2.0/24"
+      subnet_name       = "private-links"
       resource_id       = azurerm_storage_account.example.id
       subresource_names = ["blob"]
     }

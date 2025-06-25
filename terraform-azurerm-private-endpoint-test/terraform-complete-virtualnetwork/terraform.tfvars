@@ -1,0 +1,5 @@
+rg-name = "rg-vnet-example"
+location = "norwayeast"
+vnet_canonical_name = "vnet-example"
+system_name = "vhd"
+environment = "test"

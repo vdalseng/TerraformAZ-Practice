@@ -46,9 +46,8 @@ module "spoke_vnet" {
     "app"  = "10.1.2.0/24"
     "data" = "10.1.3.0/24"
   }
-  
-  vnet_peering_config = {
-    virtual_network_name      = module.hub_vnet.vnet_name
-    remote_virtual_network_id = module.hub_vnet.vnet_id
+    vnet_peering_config = {
+    remote_vnet_name = module.hub_vnet.vnet_name
+    remote_rg_name   = azurerm_resource_group.example.name
   }
 }

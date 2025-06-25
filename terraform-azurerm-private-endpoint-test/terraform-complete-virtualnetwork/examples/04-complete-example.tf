@@ -67,22 +67,20 @@ module "complete_spoke_vnet" {
     "private-links" = "10.1.4.0/24"
     "integration"   = "10.1.5.0/24"
   }
-  
   private_endpoint_configs = {
     "storage-blob" = {
-      subnet_id         = "10.1.4.0/24"
+      subnet_name       = "private-links"
       resource_id       = azurerm_storage_account.app_storage.id
       subresource_names = ["blob"]
     }
     "keyvault" = {
-      subnet_id         = "10.1.4.0/24"
+      subnet_name       = "private-links"
       resource_id       = azurerm_key_vault.app_keyvault.id
       subresource_names = ["vault"]
     }
   }
-  
-  vnet_peering_config = {
-    virtual_network_name      = module.hub_vnet.vnet_name
-    remote_virtual_network_id = module.hub_vnet.vnet_id
+    vnet_peering_config = {
+    remote_vnet_name = module.hub_vnet.vnet_name
+    remote_rg_name   = azurerm_resource_group.example.name
   }
 }
