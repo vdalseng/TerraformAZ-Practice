@@ -102,6 +102,28 @@ variable "private_endpoint_configs" {
   default = {}
 }
 
+# Enhanced VNet peering configuration - support for multiple peering connections
+variable "vnet_peering_configs" {
+  description = "Map of VNet peering configurations for multiple connections. Each key is a unique identifier."
+  type = map(object({
+    remote_vnet_name = string
+    remote_rg_name   = string
+    bidirectional    = optional(bool, false)
+    
+    # DNS forwarding configuration
+    dns_forwarding = optional(object({
+      enabled             = optional(bool, true)
+      import_remote_zones = optional(bool, true)  # Link to remote VNet's DNS zones
+      export_local_zones  = optional(bool, true)  # Allow remote VNet to link to our zones
+      
+      # Optional: Specific zones to import/export (if empty, imports all compatible zones)
+      specific_zones_to_import = optional(list(string), [])
+      specific_zones_to_export = optional(list(string), [])
+    }), {})
+  }))
+  default = null
+}
+
 # VNet peering configuration - optional, only creates peering if provided
 variable "vnet_peering_config" {
   description = "Optional VNet peering configuration. Creates a one-way peering FROM this VNet TO the remote VNet. Only requires remote VNet name and resource group - the module will fetch the resource ID automatically."
@@ -110,15 +132,4 @@ variable "vnet_peering_config" {
     remote_rg_name      = string # Resource group containing the remote VNet
   })
   default = null
-}
-
-# Shared DNS zones configuration - for linking to externally managed DNS zones
-variable "shared_dns_zones" {
-  description = "Map of shared/external DNS zones to link this VNet to. Used for centralized DNS management across multiple VNets/regions."
-  type = map(object({
-    dns_zone_name       = string # Name of the existing DNS zone
-    dns_zone_rg_name    = string # Resource group containing the DNS zone
-    registration_enabled = bool   # Whether VMs in this VNet can register in the DNS zone
-  }))
-  default = {}
 }

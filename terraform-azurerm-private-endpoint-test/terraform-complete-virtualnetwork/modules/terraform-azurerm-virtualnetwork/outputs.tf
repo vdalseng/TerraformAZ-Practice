@@ -74,9 +74,22 @@ output "network_summary" {
     
     # Peering Information
     peering = {
-      enabled     = var.vnet_peering_config != null
-      remote_vnet = var.vnet_peering_config != null ? var.vnet_peering_config.remote_vnet_name : null
-      remote_rg   = var.vnet_peering_config != null ? var.vnet_peering_config.remote_rg_name : null
+      # Legacy single peering
+      legacy_enabled  = var.vnet_peering_config != null
+      legacy_remote_vnet = var.vnet_peering_config != null ? var.vnet_peering_config.remote_vnet_name : null
+      legacy_remote_rg   = var.vnet_peering_config != null ? var.vnet_peering_config.remote_rg_name : null
+      
+      # Enhanced multiple peering
+      multiple_enabled = var.vnet_peering_configs != null
+      multiple_count   = var.vnet_peering_configs != null ? length(var.vnet_peering_configs) : 0
+      connections = var.vnet_peering_configs != null ? {
+        for key, config in var.vnet_peering_configs : key => {
+          remote_vnet   = config.remote_vnet_name
+          remote_rg     = config.remote_rg_name
+          bidirectional = config.bidirectional
+          dns_forwarding_enabled = config.dns_forwarding.enabled
+        }
+      } : {}
     }
     
     # Configuration Flags

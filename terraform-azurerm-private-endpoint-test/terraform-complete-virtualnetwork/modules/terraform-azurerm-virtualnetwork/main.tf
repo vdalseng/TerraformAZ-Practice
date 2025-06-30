@@ -1,14 +1,50 @@
-# Data source to verify remote VNet exists and fetch its resource ID
+# Data source to verify remote VNet exists and fetch its resource ID (legacy single peering)
 data "azurerm_virtual_network" "remote_vnet" {
   count               = var.vnet_peering_config != null ? 1 : 0
   name                = var.vnet_peering_config.remote_vnet_name
   resource_group_name = var.vnet_peering_config.remote_rg_name
 }
 
+# Data source for multiple remote VNets (enhanced peering)
+data "azurerm_virtual_network" "remote_vnets" {
+  for_each = var.vnet_peering_configs != null ? var.vnet_peering_configs : {}
+  
+  name                = each.value.remote_vnet_name
+  resource_group_name = each.value.remote_rg_name
+}
+
+# Data source to discover DNS zones in remote VNets for forwarding  
+data "azurerm_private_dns_zone" "remote_dns_zones" {
+  for_each = local.remote_zones_to_discover
+  
+  name                = each.value.zone_name
+  resource_group_name = each.value.resource_group_name
+}
+
 locals {
   standard_name = "${var.system_name}-${var.environment}"
   vnet_name = var.name_override != "" ? var.name_override : local.standard_name
   peering_name = var.vnet_peering_config != null ? "${local.vnet_name}-to-${var.vnet_peering_config.remote_vnet_name}" : ""
+  
+  # Enhanced peering names for multiple VNets
+  peering_names = var.vnet_peering_configs != null ? {
+    for key, config in var.vnet_peering_configs : 
+    key => "${local.vnet_name}-to-${config.remote_vnet_name}"
+  } : {}
+  
+  # Collect all remote zones that need to be discovered for DNS forwarding
+  remote_zones_to_discover = var.vnet_peering_configs != null ? merge([
+    for peering_key, peering_config in var.vnet_peering_configs : {
+      for zone_name in values(local.service_dns_zones) :
+      "${peering_key}-${replace(zone_name, ".", "_")}" => {
+        zone_name           = zone_name
+        resource_group_name = peering_config.remote_rg_name
+        peering_key         = peering_key
+        remote_vnet_name    = peering_config.remote_vnet_name
+      }
+      if peering_config.dns_forwarding.enabled && peering_config.dns_forwarding.import_remote_zones
+    }
+  ]...) : {}
   
   service_dns_zones = {
     # Storage Account
@@ -85,28 +121,31 @@ resource "azurerm_private_dns_zone" "private_dns_zone" {
   tags                = var.tags
 }
 
-# Combined DNS zone links - handles local and shared DNS zones
+# DNS zone links - handles local and remote forwarded DNS zones  
 resource "azurerm_private_dns_zone_virtual_network_link" "dns_zone_links" {
   for_each = merge(
     # Local DNS zones (created by this module)
     {
       for key, zone_name in local.auto_dns_zones : 
-      key => {
+      "local-${key}" => {
         name                = "${local.vnet_name}-${key}-link"
         resource_group      = var.resource_group.name
         dns_zone_name       = azurerm_private_dns_zone.private_dns_zone[key].name
         registration_enabled = false
+        zone_type           = "local"
       }
     },
-    # Shared DNS zones (externally managed, centralized)
+    # Remote DNS zones (forwarding from peered VNets)
     {
-      for key, config in var.shared_dns_zones :
-      key => {
-        name                = "${local.vnet_name}-to-${key}-link"
-        resource_group      = config.dns_zone_rg_name
-        dns_zone_name       = config.dns_zone_name
-        registration_enabled = config.registration_enabled
+      for key, zone_info in local.remote_zones_to_discover :
+      "remote-${key}" => {
+        name                = "${local.vnet_name}-to-${zone_info.peering_key}-${replace(zone_info.zone_name, ".", "_")}-link"
+        resource_group      = zone_info.resource_group_name
+        dns_zone_name       = zone_info.zone_name
+        registration_enabled = false
+        zone_type           = "remote"
       }
+      if contains(keys(data.azurerm_private_dns_zone.remote_dns_zones), key)
     }
   )
   
@@ -115,6 +154,11 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dns_zone_links" {
   private_dns_zone_name = each.value.dns_zone_name
   virtual_network_id    = azurerm_virtual_network.vnet.id
   registration_enabled  = each.value.registration_enabled
+  
+  tags = merge(var.tags, {
+    "DNSZoneType" = each.value.zone_type
+    "VNetName"    = local.vnet_name
+  })
 }
 
 # Private Endpoints - create for each configuration provided
@@ -131,31 +175,9 @@ resource "azurerm_private_endpoint" "private_endpoint" {
     subresource_names              = each.value.subresource_names
     is_manual_connection           = false
   }
-  # Auto-generate DNS zone group when not explicitly provided
-  dynamic "private_dns_zone_group" {
-    for_each = each.value.private_dns_zone_group != null ? [each.value.private_dns_zone_group] : (
-      length([
-        for sub in each.value.subresource_names : sub 
-        if lookup(local.service_dns_zones, sub, null) != null
-      ]) > 0 ? [{
-        name = "${each.key}-dns-group"
-        private_dns_zone_ids = [
-          for sub in each.value.subresource_names : 
-          azurerm_private_dns_zone.private_dns_zone[replace(lookup(local.service_dns_zones, sub, ""), ".", "_")].id
-          if lookup(local.service_dns_zones, sub, null) != null
-        ]
-      }] : []
-    )
-    content {
-      name                 = private_dns_zone_group.value.name
-      private_dns_zone_ids = private_dns_zone_group.value.private_dns_zone_ids
-    }
-  }
-
-  tags = var.tags
 }
 
-# VNet Peering - single-way peering FROM this VNet TO remote VNet
+# VNet Peering - single-way peering FROM this VNet TO remote VNet (legacy single peering)
 # Only created if vnet_peering_config is provided and remote VNet exists
 resource "azurerm_virtual_network_peering" "local_to_remote" {
   count                     = var.vnet_peering_config != null ? 1 : 0
@@ -163,4 +185,55 @@ resource "azurerm_virtual_network_peering" "local_to_remote" {
   resource_group_name       = var.resource_group.name
   virtual_network_name      = azurerm_virtual_network.vnet.name
   remote_virtual_network_id = data.azurerm_virtual_network.remote_vnet[0].id
+}
+
+# Enhanced VNet Peering - support for multiple peering connections
+resource "azurerm_virtual_network_peering" "local_to_remotes" {
+  for_each = var.vnet_peering_configs != null ? var.vnet_peering_configs : {}
+  
+  name                      = local.peering_names[each.key]
+  resource_group_name       = var.resource_group.name
+  virtual_network_name      = azurerm_virtual_network.vnet.name
+  remote_virtual_network_id = data.azurerm_virtual_network.remote_vnets[each.key].id
+}
+
+# Bidirectional peering - FROM remote VNets TO this VNet
+resource "azurerm_virtual_network_peering" "remotes_to_local" {
+  for_each = {
+    for key, config in coalesce(var.vnet_peering_configs, {}) : key => config
+    if config.bidirectional
+  }
+  
+  name                      = "${each.value.remote_vnet_name}-to-${local.vnet_name}"
+  resource_group_name       = each.value.remote_rg_name
+  virtual_network_name      = each.value.remote_vnet_name
+  remote_virtual_network_id = azurerm_virtual_network.vnet.id
+}
+
+# Export our local DNS zones to remote VNets (when bidirectional and DNS forwarding enabled)
+resource "azurerm_private_dns_zone_virtual_network_link" "export_to_remotes" {
+  for_each = merge([
+    for peering_key, peering_config in coalesce(var.vnet_peering_configs, {}) : {
+      for zone_key, zone_name in local.auto_dns_zones :
+      "${peering_key}-${zone_key}" => {
+        peering_key      = peering_key
+        zone_key         = zone_key
+        zone_name        = zone_name
+        remote_vnet_name = peering_config.remote_vnet_name
+        remote_vnet_id   = data.azurerm_virtual_network.remote_vnets[peering_key].id
+      }
+      if peering_config.bidirectional && peering_config.dns_forwarding.enabled && peering_config.dns_forwarding.export_local_zones
+    }
+  ]...)
+  
+  name                  = "${each.value.remote_vnet_name}-to-${each.value.zone_key}-link"
+  resource_group_name   = var.resource_group.name
+  private_dns_zone_name = azurerm_private_dns_zone.private_dns_zone[each.value.zone_key].name
+  virtual_network_id    = each.value.remote_vnet_id
+  registration_enabled  = false
+  
+  tags = merge(var.tags, {
+    "DNSZoneType" = "exported"
+    "ExportedTo"  = each.value.remote_vnet_name
+  })
 }

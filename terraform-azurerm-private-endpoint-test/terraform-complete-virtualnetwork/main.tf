@@ -20,8 +20,6 @@ resource "azurerm_private_dns_zone" "shared_blob_dns" {
   }
 }
 
-
-
 resource "azurerm_storage_account" "storage_1" {
   name                          = "stgaccexample001"
   resource_group_name           = azurerm_resource_group.example.name
@@ -34,11 +32,11 @@ resource "azurerm_storage_account" "storage_1" {
   network_rules {
     default_action              = "Deny"
     bypass                      = ["AzureServices", "Logging", "Metrics"]
-    ip_rules                    = ["188.95.241.183"]  # Your IP for Terraform deployment
-    virtual_network_subnet_ids  = []  # Using private endpoints instead
+    ip_rules                    = ["188.95.241.183"]
+    virtual_network_subnet_ids  = []
   }
 
-  shared_access_key_enabled   = true  # Temporarily enabled for Terraform deployment
+  shared_access_key_enabled   = true
 
   https_traffic_only_enabled  = true
 }
