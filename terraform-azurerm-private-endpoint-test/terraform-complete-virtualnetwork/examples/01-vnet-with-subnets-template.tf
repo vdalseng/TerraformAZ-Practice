@@ -13,7 +13,7 @@ provider "azurerm" {
 
 # Template variables for easy customization
 locals {
-  system_name = "webapp"
+  system_name = "someapp"
   environment = "dev"
 }
 

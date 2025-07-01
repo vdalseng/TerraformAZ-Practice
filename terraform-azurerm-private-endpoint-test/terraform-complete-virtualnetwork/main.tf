@@ -9,17 +9,6 @@ resource "azurerm_resource_group" "resource_group_west_europe" {
   location = "West Europe"
 }
 
-# Shared Private DNS Zone for blob storage across all regions
-# This single zone will handle DNS resolution for both storage accounts
-resource "azurerm_private_dns_zone" "shared_blob_dns" {
-  name                = "privatelink.blob.core.windows.net"
-  resource_group_name = azurerm_resource_group.example.name  # Created in primary region
-  tags                = {
-    Purpose = "Shared DNS zone for cross-region blob storage access"
-    Regions = "Norway East, West Europe"
-  }
-}
-
 resource "azurerm_storage_account" "storage_1" {
   name                          = "stgaccexample001"
   resource_group_name           = azurerm_resource_group.example.name
@@ -94,26 +83,22 @@ module "vnet1" {
       subnet_name       = "backend"
       resource_id       = azurerm_storage_account.storage_1.id
       subresource_names = ["blob"]
-      # Use the shared DNS zone instead of auto-generated one
-      private_dns_zone_group = {
-        name                 = "storage-blob-dns-group"
-        private_dns_zone_ids = [azurerm_private_dns_zone.shared_blob_dns.id]
-      }
     }
   }
   
-  # Link to shared DNS zones (automatic linking with dynamic names)
-  shared_dns_zones = {
-    "shared-blob-storage" = {
-      dns_zone_name       = azurerm_private_dns_zone.shared_blob_dns.name
-      dns_zone_rg_name    = azurerm_resource_group.example.name
-      registration_enabled = false
+  # VNet peering to vnet2 in West Europe (DNS forwarding disabled for initial deployment)
+  vnet_peering_configs = {
+    "to-vnet2" = {
+      remote_vnet_name = "${var.system_name}-2-${var.environment}"
+      remote_rg_name   = azurerm_resource_group.resource_group_west_europe.name
+      bidirectional    = true
+      
+      dns_forwarding = {
+        enabled             = false  # Disabled for initial deployment
+        import_remote_zones = false
+        export_local_zones  = false
+      }
     }
-  }
-  # VNet peering to vnet2 in West Europe
-  vnet_peering_config = {
-    remote_vnet_name = "${var.system_name}-2-${var.environment}"
-    remote_rg_name   = azurerm_resource_group.resource_group_west_europe.name
   }
 }
 
@@ -134,29 +119,25 @@ module "vnet2" {
   nsg_attached_subnets = []
   private_endpoint_configs = {
     "storage-blob" = {
-      subnet_name              = "web-app"
-      resource_id              = azurerm_storage_account.storage_2.id
-      subresource_names        = ["blob"]
-      # Use the same shared DNS zone
-      private_dns_zone_group = {
-        name                 = "storage-blob-dns-group"
-        private_dns_zone_ids = [azurerm_private_dns_zone.shared_blob_dns.id]
-      }
+      subnet_name       = "web-app"
+      resource_id       = azurerm_storage_account.storage_2.id
+      subresource_names = ["blob"]
     }  
   }
   
-  # Link to shared DNS zones (automatic linking with dynamic names)
-  shared_dns_zones = {
-    "shared-blob-storage" = {
-      dns_zone_name       = azurerm_private_dns_zone.shared_blob_dns.name
-      dns_zone_rg_name    = azurerm_resource_group.example.name
-      registration_enabled = false
+  # VNet peering back to vnet1 in Norway East (DNS forwarding disabled for initial deployment)
+  vnet_peering_configs = {
+    "to-vnet1" = {
+      remote_vnet_name = "${var.system_name}-1-${var.environment}"
+      remote_rg_name   = azurerm_resource_group.example.name
+      bidirectional    = true
+      
+      dns_forwarding = {
+        enabled             = false  # Disabled for initial deployment
+        import_remote_zones = false
+        export_local_zones  = false
+      }
     }
-  }
-  # VNet peering back to vnet1 in Norway East
-  vnet_peering_config = {
-    remote_vnet_name = "${var.system_name}-1-${var.environment}"
-    remote_rg_name   = azurerm_resource_group.example.name
   }
 }
 
