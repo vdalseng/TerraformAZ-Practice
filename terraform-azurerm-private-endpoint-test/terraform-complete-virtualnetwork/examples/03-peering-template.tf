@@ -61,20 +61,20 @@ resource "azurerm_key_vault" "app2_keyvault" {
 # App1 VNet with storage services
 module "app1_vnet" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   vnet_canonical_name = "${local.app1_system_name}-${local.environment}-vnet"
   system_name         = local.app1_system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.app1_rg
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 10)]  # 10.0.10.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 10)] # 10.0.10.0/24
+
   subnet_configs = {
-    "web"               = cidrsubnet("10.0.0.0/16", 10, 40)  # 10.0.10.0/26 - 64 IPs
-    "app"               = cidrsubnet("10.0.0.0/16", 10, 41)  # 10.0.10.64/26 - 64 IPs
-    "data"              = cidrsubnet("10.0.0.0/16", 10, 42)  # 10.0.10.128/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 43)  # 10.0.10.192/26 - 64 IPs
+    "web"               = cidrsubnet("10.0.0.0/16", 10, 40) # 10.0.10.0/26 - 64 IPs
+    "app"               = cidrsubnet("10.0.0.0/16", 10, 41) # 10.0.10.64/26 - 64 IPs
+    "data"              = cidrsubnet("10.0.0.0/16", 10, 42) # 10.0.10.128/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 43) # 10.0.10.192/26 - 64 IPs
   }
-  
+
   # App1 storage with private endpoints
   private_endpoint_configs = {
     "app1-storage-blob" = {
@@ -90,22 +90,22 @@ module "app1_vnet" {
       # Creates: privatelink.file.core.windows.net
     }
   }
-  
+
   # Peer with App2 VNet
   vnet_peering_configs = {
     "to-app2" = {
       remote_vnet_name = "${local.app2_system_name}-${local.environment}-vnet"
       remote_rg_name   = azurerm_resource_group.app2_rg.name
-      bidirectional    = true  # Creates peering in both directions automatically
-      
+      bidirectional    = true # Creates peering in both directions automatically
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access App2's Key Vault via private DNS
-        export_local_zones  = true  # Allow App2 to access App1's storage
+        import_remote_zones = true # Access App2's Key Vault via private DNS
+        export_local_zones  = true # Allow App2 to access App1's storage
       }
     }
   }
-  
+
   tags = {
     Environment = local.environment
     Application = "App1"
@@ -117,20 +117,20 @@ module "app1_vnet" {
 # App2 VNet with security services
 module "app2_vnet" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   vnet_canonical_name = "${local.app2_system_name}-${local.environment}-vnet"
   system_name         = local.app2_system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.app2_rg
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 11)]  # 10.0.11.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 11)] # 10.0.11.0/24
+
   subnet_configs = {
-    "api"               = cidrsubnet("10.0.0.0/16", 10, 44)  # 10.0.11.0/26 - 64 IPs
-    "app"               = cidrsubnet("10.0.0.0/16", 10, 45)  # 10.0.11.64/26 - 64 IPs
-    "mgmt"              = cidrsubnet("10.0.0.0/16", 10, 46)  # 10.0.11.128/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 47)  # 10.0.11.192/26 - 64 IPs
+    "api"               = cidrsubnet("10.0.0.0/16", 10, 44) # 10.0.11.0/26 - 64 IPs
+    "app"               = cidrsubnet("10.0.0.0/16", 10, 45) # 10.0.11.64/26 - 64 IPs
+    "mgmt"              = cidrsubnet("10.0.0.0/16", 10, 46) # 10.0.11.128/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 47) # 10.0.11.192/26 - 64 IPs
   }
-  
+
   # App2 Key Vault with private endpoint
   private_endpoint_configs = {
     "app2-keyvault" = {
@@ -140,22 +140,22 @@ module "app2_vnet" {
       # Creates: privatelink.vaultcore.azure.net
     }
   }
-  
+
   # Peer with App1 VNet
   vnet_peering_configs = {
     "to-app1" = {
       remote_vnet_name = module.app1_vnet.vnet_name
       remote_rg_name   = azurerm_resource_group.app1_rg.name
-      bidirectional    = true  # Creates peering in both directions automatically
-      
+      bidirectional    = true # Creates peering in both directions automatically
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access App1's storage via private DNS
-        export_local_zones  = true  # Allow App1 to access App2's Key Vault
+        import_remote_zones = true # Access App1's storage via private DNS
+        export_local_zones  = true # Allow App1 to access App2's Key Vault
       }
     }
   }
-  
+
   tags = {
     Environment = local.environment
     Application = "App2"
@@ -207,11 +207,11 @@ output "cross_vnet_dns_resolution" {
 output "peering_summary" {
   description = "Summary of peer-to-peer VNet connections"
   value = {
-    architecture = "Peer-to-Peer (no hub/spoke hierarchy)"
-    bidirectional_peering = "Automatic creation of App1↔App2 peering connections"
-    dns_forwarding_enabled = "Private endpoints resolvable across both VNets"
-    security_model = "Requires RBAC permissions on target VNets for peering creation"
-    total_peering_connections = 2  # One in each direction
-    use_case = "Two independent applications sharing resources via VNet peering"
+    architecture              = "Peer-to-Peer (no hub/spoke hierarchy)"
+    bidirectional_peering     = "Automatic creation of App1↔App2 peering connections"
+    dns_forwarding_enabled    = "Private endpoints resolvable across both VNets"
+    security_model            = "Requires RBAC permissions on target VNets for peering creation"
+    total_peering_connections = 2 # One in each direction
+    use_case                  = "Two independent applications sharing resources via VNet peering"
   }
 }

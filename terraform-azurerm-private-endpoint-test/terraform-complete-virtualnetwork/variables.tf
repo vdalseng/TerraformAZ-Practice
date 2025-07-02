@@ -1,19 +1,19 @@
 variable "rg-name" {
-    type = string
+  type = string
 }
 
 variable "location" {
-    type = string
+  type = string
 }
 
 variable "vnet_canonical_name" {
-    type = string
+  type = string
 }
 
 variable "system_name" {
-    type = string
+  type = string
 }
 
 variable "environment" {
-    type = string
+  type = string
 }

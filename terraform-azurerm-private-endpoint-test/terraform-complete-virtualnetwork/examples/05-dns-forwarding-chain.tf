@@ -86,18 +86,18 @@ data "azurerm_client_config" "current" {}
 # VNet1 - Storage services, connects to VNet2
 module "vnet1" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   vnet_canonical_name = "${local.vnet1_system_name}-${local.environment}-vnet"
   system_name         = local.vnet1_system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.vnet1_rg
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 30)]  # 10.0.30.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 30)] # 10.0.30.0/24
+
   subnet_configs = {
-    "application"       = cidrsubnet("10.0.0.0/16", 10, 120)  # 10.0.30.0/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 121)  # 10.0.30.64/26 - 64 IPs
+    "application"       = cidrsubnet("10.0.0.0/16", 10, 120) # 10.0.30.0/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 121) # 10.0.30.64/26 - 64 IPs
   }
-  
+
   private_endpoint_configs = {
     "storage-blob" = {
       subnet_name       = "private-endpoints"
@@ -112,22 +112,22 @@ module "vnet1" {
       # Creates: privatelink.file.core.windows.net
     }
   }
-  
+
   # Connect to VNet2 only (gets transitive access to VNet3 through VNet2)
   vnet_peering_configs = {
     "to-vnet2" = {
       remote_vnet_name = "${local.vnet2_system_name}-${local.environment}-vnet"
       remote_rg_name   = azurerm_resource_group.vnet2_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access VNet2's Key Vault + forwarded VNet3 zones
-        export_local_zones  = true  # VNet2 can access our storage + forward to VNet3
+        import_remote_zones = true # Access VNet2's Key Vault + forwarded VNet3 zones
+        export_local_zones  = true # VNet2 can access our storage + forward to VNet3
       }
     }
   }
-  
+
   tags = {
     Environment = "Production"
     Service     = "Storage"
@@ -138,18 +138,18 @@ module "vnet1" {
 # VNet2 - Key Vault services, connects to both VNet1 and VNet3 (central hub in chain)
 module "vnet2" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   vnet_canonical_name = "${local.vnet2_system_name}-${local.environment}-vnet"
   system_name         = local.vnet2_system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.vnet2_rg
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 31)]  # 10.0.31.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 31)] # 10.0.31.0/24
+
   subnet_configs = {
-    "api"               = cidrsubnet("10.0.0.0/16", 10, 124)  # 10.0.31.0/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 125)  # 10.0.31.64/26 - 64 IPs
+    "api"               = cidrsubnet("10.0.0.0/16", 10, 124) # 10.0.31.0/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 125) # 10.0.31.64/26 - 64 IPs
   }
-  
+
   private_endpoint_configs = {
     "keyvault" = {
       subnet_name       = "private-endpoints"
@@ -158,33 +158,33 @@ module "vnet2" {
       # Creates: privatelink.vaultcore.azure.net
     }
   }
-  
+
   # Connect to both VNet1 and VNet3 (central node in the chain)
   vnet_peering_configs = {
     "to-vnet1" = {
       remote_vnet_name = module.vnet1.vnet_name
       remote_rg_name   = azurerm_resource_group.vnet1_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access VNet1's storage
-        export_local_zones  = true  # VNet1 can access our Key Vault
+        import_remote_zones = true # Access VNet1's storage
+        export_local_zones  = true # VNet1 can access our Key Vault
       }
     }
     "to-vnet3" = {
       remote_vnet_name = "${local.vnet3_system_name}-${local.environment}-vnet"
       remote_rg_name   = azurerm_resource_group.vnet3_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access VNet3's database
-        export_local_zones  = true  # VNet3 can access our Key Vault
+        import_remote_zones = true # Access VNet3's database
+        export_local_zones  = true # VNet3 can access our Key Vault
       }
     }
   }
-  
+
   tags = {
     Environment = "Production"
     Service     = "Security/Key Management"
@@ -195,18 +195,18 @@ module "vnet2" {
 # VNet3 - Database services, connects to VNet2 only
 module "vnet3" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   vnet_canonical_name = "${local.vnet3_system_name}-${local.environment}-vnet"
   system_name         = local.vnet3_system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.vnet3_rg
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 32)]  # 10.0.32.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 32)] # 10.0.32.0/24
+
   subnet_configs = {
-    "data"              = cidrsubnet("10.0.0.0/16", 10, 128)  # 10.0.32.0/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 129)  # 10.0.32.64/26 - 64 IPs
+    "data"              = cidrsubnet("10.0.0.0/16", 10, 128) # 10.0.32.0/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 129) # 10.0.32.64/26 - 64 IPs
   }
-  
+
   private_endpoint_configs = {
     "database" = {
       subnet_name       = "private-endpoints"
@@ -215,22 +215,22 @@ module "vnet3" {
       # Creates: privatelink.postgres.database.azure.com
     }
   }
-  
+
   # Connect to VNet2 only (gets transitive access to VNet1 through VNet2)
   vnet_peering_configs = {
     "to-vnet2" = {
       remote_vnet_name = module.vnet2.vnet_name
       remote_rg_name   = azurerm_resource_group.vnet2_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access VNet2's Key Vault + forwarded VNet1 zones
-        export_local_zones  = true  # VNet2 can access our database + forward to VNet1
+        import_remote_zones = true # Access VNet2's Key Vault + forwarded VNet1 zones
+        export_local_zones  = true # VNet2 can access our database + forward to VNet1
       }
     }
   }
-  
+
   tags = {
     Environment = "Production"
     Service     = "Database"
@@ -264,14 +264,14 @@ output "dns_chain_summary" {
 output "peering_connections_created" {
   description = "Summary of all peering connections and DNS forwarding"
   value = {
-    total_peering_connections = 6  # 3 bidirectional connections = 6 peering resources
+    total_peering_connections = 6 # 3 bidirectional connections = 6 peering resources
     dns_zones_per_vnet = {
       vnet1 = "2 DNS zones: privatelink.blob.core.windows.net, privatelink.file.core.windows.net"
       vnet2 = "1 DNS zone: privatelink.vaultcore.azure.net"
       vnet3 = "1 DNS zone: privatelink.postgres.database.azure.com"
     }
     automatic_dns_forwarding = "All VNets can resolve each other's private endpoints through the chain"
-    security_model = "Each peering requires proper RBAC permissions on target VNets"
+    security_model           = "Each peering requires proper RBAC permissions on target VNets"
   }
 }
 

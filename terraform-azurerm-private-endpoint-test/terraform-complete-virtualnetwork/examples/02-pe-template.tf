@@ -51,19 +51,19 @@ resource "azurerm_key_vault" "example" {
 
 module "vnet_with_pe" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   # Template naming - change system_name to match your application
   vnet_canonical_name = "${local.system_name}-${local.environment}-vnet"
   system_name         = local.system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.example
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 2)]  # 10.0.2.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 2)] # 10.0.2.0/24
+
   subnet_configs = {
-    "application"       = cidrsubnet("10.0.0.0/16", 10, 8)   # 10.0.2.0/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 9)   # 10.0.2.64/26 - 64 IPs
+    "application"       = cidrsubnet("10.0.0.0/16", 10, 8) # 10.0.2.0/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 9) # 10.0.2.64/26 - 64 IPs
   }
-  
+
   # Multiple private endpoints with automatic DNS zone creation
   private_endpoint_configs = {
     "storage-blob" = {
@@ -75,7 +75,7 @@ module "vnet_with_pe" {
     "storage-file" = {
       subnet_name       = "private-endpoints"
       resource_id       = azurerm_storage_account.example.id
-      subresource_names = ["file"]  
+      subresource_names = ["file"]
       # DNS zone automatically created: privatelink.file.core.windows.net
     }
     "keyvault" = {
@@ -85,7 +85,7 @@ module "vnet_with_pe" {
       # DNS zone automatically created: privatelink.vaultcore.azure.net
     }
   }
-  
+
   tags = {
     Environment = local.environment
     Project     = "Private Endpoint Example"
@@ -118,7 +118,7 @@ output "private_endpoint_fqdns" {
   description = "Example FQDNs that can be resolved within this VNet"
   value = {
     storage_blob_fqdn = "${azurerm_storage_account.example.name}.blob.core.windows.net"
-    storage_file_fqdn = "${azurerm_storage_account.example.name}.file.core.windows.net"  
+    storage_file_fqdn = "${azurerm_storage_account.example.name}.file.core.windows.net"
     keyvault_fqdn     = "${azurerm_key_vault.example.name}.vault.azure.net"
   }
 }

@@ -22,9 +22,9 @@ output "subnet_ids" {
 # Private Endpoint Outputs
 output "private_endpoint_ips" {
   description = "Map of private endpoint names to their private IP addresses"
-  value       = { 
-    for name, pe in azurerm_private_endpoint.private_endpoint : 
-    name => pe.private_service_connection[0].private_ip_address 
+  value = {
+    for name, pe in azurerm_private_endpoint.private_endpoint :
+    name => pe.private_service_connection[0].private_ip_address
   }
 }
 
@@ -39,21 +39,21 @@ output "network_summary" {
   description = "Comprehensive summary of the network configuration including all key components"
   value = {
     # Core Network Information
-    vnet_name           = azurerm_virtual_network.vnet.name
-    vnet_id             = azurerm_virtual_network.vnet.id
-    resource_group      = azurerm_virtual_network.vnet.resource_group_name
-    location            = azurerm_virtual_network.vnet.location
-    address_space       = tolist(azurerm_virtual_network.vnet.address_space)
-    
+    vnet_name      = azurerm_virtual_network.vnet.name
+    vnet_id        = azurerm_virtual_network.vnet.id
+    resource_group = azurerm_virtual_network.vnet.resource_group_name
+    location       = azurerm_virtual_network.vnet.location
+    address_space  = tolist(azurerm_virtual_network.vnet.address_space)
+
     # Subnet Information
-    subnet_count        = length(azurerm_subnet.subnet)
+    subnet_count = length(azurerm_subnet.subnet)
     subnets = {
       for name, subnet in azurerm_subnet.subnet : name => {
-        id            = subnet.id
+        id             = subnet.id
         address_prefix = subnet.address_prefixes[0]
       }
     }
-    
+
     # Private Endpoint Information
     private_endpoints = {
       count = length(azurerm_private_endpoint.private_endpoint)
@@ -65,33 +65,28 @@ output "network_summary" {
         }
       }
     }
-    
+
     # DNS Configuration
     dns_zones = {
       count = length(azurerm_private_dns_zone.private_dns_zone)
       zones = { for key, zone in azurerm_private_dns_zone.private_dns_zone : key => zone.name }
     }
-    
+
     # Peering Information
     peering = {
-      # Legacy single peering
-      legacy_enabled  = var.vnet_peering_config != null
-      legacy_remote_vnet = var.vnet_peering_config != null ? var.vnet_peering_config.remote_vnet_name : null
-      legacy_remote_rg   = var.vnet_peering_config != null ? var.vnet_peering_config.remote_rg_name : null
-      
-      # Enhanced multiple peering
-      multiple_enabled = var.vnet_peering_configs != null
-      multiple_count   = var.vnet_peering_configs != null ? length(var.vnet_peering_configs) : 0
+      # Enhanced multiple peering (the only supported method now)
+      enabled = var.vnet_peering_configs != null
+      count   = var.vnet_peering_configs != null ? length(var.vnet_peering_configs) : 0
       connections = var.vnet_peering_configs != null ? {
         for key, config in var.vnet_peering_configs : key => {
-          remote_vnet   = config.remote_vnet_name
-          remote_rg     = config.remote_rg_name
-          bidirectional = config.bidirectional
+          remote_vnet            = config.remote_vnet_name
+          remote_rg              = config.remote_rg_name
+          bidirectional          = config.bidirectional
           dns_forwarding_enabled = config.dns_forwarding.enabled
         }
       } : {}
     }
-    
+
     # Configuration Flags
     features = {
       ddos_protection_enabled = var.ddos_protection_plan_id != null

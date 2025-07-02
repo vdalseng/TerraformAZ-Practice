@@ -13,8 +13,8 @@ provider "azurerm" {
 
 # Local variables for consistent naming
 locals {
-  webapp_system_name = "webapp"
-  apiapp_system_name = "apiapp"
+  webapp_system_name  = "webapp"
+  apiapp_system_name  = "apiapp"
   dataapp_system_name = "dataapp"
   environment         = "dev"
 }
@@ -88,19 +88,19 @@ data "azurerm_client_config" "current" {}
 # WebApp VNet - Frontend application with storage services
 module "webapp_vnet" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   vnet_canonical_name = "${local.webapp_system_name}-${local.environment}-vnet"
   system_name         = local.webapp_system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.webapp_rg
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 20)]  # 10.0.20.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 20)] # 10.0.20.0/24
+
   subnet_configs = {
-    "web"               = cidrsubnet("10.0.0.0/16", 10, 80)  # 10.0.20.0/26 - 64 IPs
-    "app"               = cidrsubnet("10.0.0.0/16", 10, 81)  # 10.0.20.64/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 82)  # 10.0.20.128/26 - 64 IPs
+    "web"               = cidrsubnet("10.0.0.0/16", 10, 80) # 10.0.20.0/26 - 64 IPs
+    "app"               = cidrsubnet("10.0.0.0/16", 10, 81) # 10.0.20.64/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 82) # 10.0.20.128/26 - 64 IPs
   }
-  
+
   # WebApp storage with private endpoints
   private_endpoint_configs = {
     "webapp-storage-blob" = {
@@ -114,33 +114,33 @@ module "webapp_vnet" {
       subresource_names = ["file"]
     }
   }
-  
+
   # Peer with APIApp and DataApp VNets for cross-application communication
   vnet_peering_configs = {
     "to-apiapp" = {
       remote_vnet_name = "${local.apiapp_system_name}-${local.environment}-vnet"
       remote_rg_name   = azurerm_resource_group.apiapp_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access APIApp's Key Vault
-        export_local_zones  = true  # Share WebApp storage with APIApp
+        import_remote_zones = true # Access APIApp's Key Vault
+        export_local_zones  = true # Share WebApp storage with APIApp
       }
     }
     "to-dataapp" = {
       remote_vnet_name = "${local.dataapp_system_name}-${local.environment}-vnet"
       remote_rg_name   = azurerm_resource_group.dataapp_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access DataApp's database
-        export_local_zones  = true  # Share WebApp storage with DataApp
+        import_remote_zones = true # Access DataApp's database
+        export_local_zones  = true # Share WebApp storage with DataApp
       }
     }
   }
-  
+
   tags = {
     Environment = local.environment
     Application = "WebApp"
@@ -152,19 +152,19 @@ module "webapp_vnet" {
 # APIApp VNet - API services with Key Vault
 module "apiapp_vnet" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   vnet_canonical_name = "${local.apiapp_system_name}-${local.environment}-vnet"
   system_name         = local.apiapp_system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.apiapp_rg
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 21)]  # 10.0.21.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 21)] # 10.0.21.0/24
+
   subnet_configs = {
-    "api"               = cidrsubnet("10.0.0.0/16", 10, 84)  # 10.0.21.0/26 - 64 IPs
-    "app"               = cidrsubnet("10.0.0.0/16", 10, 85)  # 10.0.21.64/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 86)  # 10.0.21.128/26 - 64 IPs
+    "api"               = cidrsubnet("10.0.0.0/16", 10, 84) # 10.0.21.0/26 - 64 IPs
+    "app"               = cidrsubnet("10.0.0.0/16", 10, 85) # 10.0.21.64/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 86) # 10.0.21.128/26 - 64 IPs
   }
-  
+
   # APIApp Key Vault with private endpoint
   private_endpoint_configs = {
     "apiapp-keyvault" = {
@@ -173,33 +173,33 @@ module "apiapp_vnet" {
       subresource_names = ["vault"]
     }
   }
-  
+
   # Peer with WebApp and DataApp for cross-application communication
   vnet_peering_configs = {
     "to-webapp" = {
       remote_vnet_name = module.webapp_vnet.vnet_name
       remote_rg_name   = azurerm_resource_group.webapp_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access WebApp's storage
-        export_local_zones  = true  # Share APIApp Key Vault with WebApp
+        import_remote_zones = true # Access WebApp's storage
+        export_local_zones  = true # Share APIApp Key Vault with WebApp
       }
     }
     "to-dataapp" = {
       remote_vnet_name = "${local.dataapp_system_name}-${local.environment}-vnet"
       remote_rg_name   = azurerm_resource_group.dataapp_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access DataApp's database
-        export_local_zones  = true  # Share APIApp Key Vault with DataApp
+        import_remote_zones = true # Access DataApp's database
+        export_local_zones  = true # Share APIApp Key Vault with DataApp
       }
     }
   }
-  
+
   tags = {
     Environment = local.environment
     Application = "APIApp"
@@ -211,19 +211,19 @@ module "apiapp_vnet" {
 # DataApp VNet - Data services with PostgreSQL database
 module "dataapp_vnet" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   vnet_canonical_name = "${local.dataapp_system_name}-${local.environment}-vnet"
   system_name         = local.dataapp_system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.dataapp_rg
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 22)]  # 10.0.22.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 22)] # 10.0.22.0/24
+
   subnet_configs = {
-    "data"              = cidrsubnet("10.0.0.0/16", 10, 88)  # 10.0.22.0/26 - 64 IPs
-    "app"               = cidrsubnet("10.0.0.0/16", 10, 89)  # 10.0.22.64/26 - 64 IPs
-    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 90)  # 10.0.22.128/26 - 64 IPs
+    "data"              = cidrsubnet("10.0.0.0/16", 10, 88) # 10.0.22.0/26 - 64 IPs
+    "app"               = cidrsubnet("10.0.0.0/16", 10, 89) # 10.0.22.64/26 - 64 IPs
+    "private-endpoints" = cidrsubnet("10.0.0.0/16", 10, 90) # 10.0.22.128/26 - 64 IPs
   }
-  
+
   # DataApp PostgreSQL database with private endpoint
   private_endpoint_configs = {
     "dataapp-database" = {
@@ -232,33 +232,33 @@ module "dataapp_vnet" {
       subresource_names = ["postgresqlServer"]
     }
   }
-  
+
   # Peer with WebApp and APIApp for cross-application communication
   vnet_peering_configs = {
     "to-webapp" = {
       remote_vnet_name = module.webapp_vnet.vnet_name
       remote_rg_name   = azurerm_resource_group.webapp_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access WebApp's storage
-        export_local_zones  = true  # Share DataApp database with WebApp
+        import_remote_zones = true # Access WebApp's storage
+        export_local_zones  = true # Share DataApp database with WebApp
       }
     }
     "to-apiapp" = {
       remote_vnet_name = module.apiapp_vnet.vnet_name
       remote_rg_name   = azurerm_resource_group.apiapp_rg.name
       bidirectional    = true
-      
+
       dns_forwarding = {
         enabled             = true
-        import_remote_zones = true  # Access APIApp's Key Vault
-        export_local_zones  = true  # Share DataApp database with APIApp
+        import_remote_zones = true # Access APIApp's Key Vault
+        export_local_zones  = true # Share DataApp database with APIApp
       }
     }
   }
-  
+
   tags = {
     Environment = local.environment
     Application = "DataApp"
@@ -317,12 +317,12 @@ output "cross_app_connectivity_matrix" {
 output "dns_forwarding_summary" {
   description = "Summary of automatic DNS zone forwarding between separate applications"
   value = {
-    total_vnets = 3
-    total_peering_connections = 6  # 2 per VNet × 3 VNets = 6 bidirectional connections
-    architecture = "Completely separate applications - no shared services"
+    total_vnets                 = 3
+    total_peering_connections   = 6 # 2 per VNet × 3 VNets = 6 bidirectional connections
+    architecture                = "Completely separate applications - no shared services"
     automatic_dns_zones_created = "Each VNet creates zones for its private endpoints"
-    automatic_dns_forwarding = "All VNets can resolve each other's private endpoints"
-    security_note = "All peering requires proper RBAC permissions on target VNets"
-    use_case = "Three independent applications sharing resources via VNet peering and DNS forwarding"
+    automatic_dns_forwarding    = "All VNets can resolve each other's private endpoints"
+    security_note               = "All peering requires proper RBAC permissions on target VNets"
+    use_case                    = "Three independent applications sharing resources via VNet peering and DNS forwarding"
   }
 }

@@ -24,19 +24,19 @@ resource "azurerm_resource_group" "example" {
 
 module "basic_vnet" {
   source = "../modules/terraform-azurerm-virtualnetwork"
-  
+
   # Template naming - change system_name to match your application
   vnet_canonical_name = "${local.system_name}-${local.environment}-vnet"
   system_name         = local.system_name
   environment         = local.environment
   resource_group      = azurerm_resource_group.example
-  address_space       = [cidrsubnet("10.0.0.0/16", 8, 1)]  # 10.0.1.0/24
-  
+  address_space       = [cidrsubnet("10.0.0.0/16", 8, 1)] # 10.0.1.0/24
+
   subnet_configs = {
-    "frontend" = cidrsubnet("10.0.0.0/16", 10, 4)   # 10.0.1.0/26 - 64 IPs
-    "backend"  = cidrsubnet("10.0.0.0/16", 10, 5)   # 10.0.1.64/26 - 64 IPs
+    "frontend" = cidrsubnet("10.0.0.0/16", 10, 4) # 10.0.1.0/26 - 64 IPs
+    "backend"  = cidrsubnet("10.0.0.0/16", 10, 5) # 10.0.1.64/26 - 64 IPs
   }
-  
+
   tags = {
     Environment = local.environment
     Project     = "Basic VNet Example"

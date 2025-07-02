@@ -3,19 +3,35 @@ variable "vnet_canonical_name" {
   type        = string
 }
 
+variable "system_name" {
+  description = "Required. The name for the system."
+  type        = string
+}
+
 variable "environment" {
   description = "The environment name (e.g., dev, test, prod)"
   type        = string
 }
 
 variable "resource_group" {
-  description = "The resource group information (name, location, etc.)."
+  description = "The name of resource group."
 }
 
 variable "name_override" {
   description = "Set this to force a name of the resource. Should normally not be used."
   type        = string
   default     = ""
+}
+
+variable "address_space" {
+  description = "The address space that is used the virtual network. You can supply more than one address space."
+  type        = list(string)
+}
+
+variable "dns_servers" {
+  description = "(Optional) List of DNS Servers configured in the VNET"
+  type        = list(string)
+  default     = []
 }
 
 variable "subnet_configs" {
@@ -27,22 +43,6 @@ variable "subnet_configs" {
 variable "nsg_attached_subnets" {
   description = "A set with the names of subnets as defined in subnet_configs that are to be attached to the NSG."
   type        = set(string)
-  default     = []
-}
-
-variable "system_name" {
-  description = "Required. The name for the system."
-  type        = string
-}
-
-variable "address_space" {
-  description = "The address space that is used the virtual network. You can supply more than one address space."
-  type        = list(string)
-}
-
-variable "dns_servers" {
-  description = "(Optional) List of DNS Servers configured in the VNET"
-  type        = list(string)
   default     = []
 }
 
@@ -91,9 +91,9 @@ variable "ddos_protection_plan_id" {
 variable "private_endpoint_configs" {
   description = "Map of private endpoint configurations. Key is used as identifier. Only essential inputs required - names and connections are auto-generated."
   type = map(object({
-    subnet_name       = string       # Name of the subnet where PE will be created
-    resource_id       = string       # ID of the resource to connect to
-    subresource_names = list(string) # Subresource types (e.g., ["blob"], ["vault"])
+    subnet_name         = string       # Name of the subnet where PE will be created
+    resource_id         = string       # ID of the resource to connect to
+    subresource_names   = list(string) # Subresource types (e.g., ["blob"], ["vault"])
     private_dns_zone_group = optional(object({
       name                 = string
       private_dns_zone_ids = list(string)
@@ -112,9 +112,9 @@ variable "vnet_peering_configs" {
 
     # DNS forwarding configuration
     dns_forwarding = optional(object({
-      enabled             = optional(bool, true)
-      import_remote_zones = optional(bool, true) # Link to remote VNet's DNS zones
-      export_local_zones  = optional(bool, true) # Allow remote VNet to link to our zones
+      enabled                 = optional(bool, true)
+      import_remote_dns_zones = optional(bool, true) # Link to remote VNet's DNS zones
+      export_local_dns_zones  = optional(bool, false) # Allow remote VNet to link to your zones
 
       # Optional: Specific zones to import/export (if empty, imports all compatible zones)
       specific_zones_to_import = optional(list(string), [])
