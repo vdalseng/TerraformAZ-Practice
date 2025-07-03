@@ -4,21 +4,11 @@
 variable "system_name" {
   description = "The name for the system (used in resource naming)"
   type        = string
-  
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9-]+$", var.system_name))
-    error_message = "System name must contain only alphanumeric characters and hyphens."
-  }
 }
 
 variable "environment" {
   description = "The environment name (dev, test, staging, prod)"
   type        = string
-  
-  validation {
-    condition     = contains(["dev", "test", "staging", "prod"], var.environment)
-    error_message = "Environment must be one of: dev, test, staging, prod."
-  }
 }
 
 variable "location" {

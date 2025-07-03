@@ -68,17 +68,36 @@ The `main.tf` includes commented examples for:
 
 ### Adding Private Endpoints
 
-Uncomment and modify the `private_endpoint_configs` section:
+**Use official Microsoft-documented subresource names** - the module handles conflicts automatically:
 
 ```hcl
 private_endpoint_configs = {
   storage_blob = {
     subnet_name       = "endpoints"
     resource_id       = azurerm_storage_account.example.id
-    subresource_names = ["blob"]
+    subresource_names = ["blob"]                    # ✅ Official Microsoft name
+  }
+  key_vault = {
+    subnet_name       = "endpoints" 
+    resource_id       = azurerm_key_vault.example.id
+    subresource_names = ["vault"]                   # ✅ Official Microsoft name
+  }
+  cognitive_services = {
+    subnet_name       = "endpoints"
+    resource_id       = azurerm_cognitive_account.example.id
+    subresource_names = ["account"]                 # ✅ Auto-resolves to cognitiveservices DNS
+  }
+  purview = {
+    subnet_name       = "endpoints"
+    resource_id       = azurerm_purview_account.example.id
+    subresource_names = ["account"]                 # ✅ Auto-resolves to purview DNS
   }
 }
 ```
+
+🧠 **Smart Conflict Resolution**: For subresource names used by multiple services (like "account"), the module automatically examines the `resource_id` to determine the correct DNS zone. No extra configuration needed!
+
+For the complete list of supported subresource names, see: `modules/terraform-azurerm-virtualnetwork/azure_private_link_zones.tf`
 
 ### Adding VNet Peering
 

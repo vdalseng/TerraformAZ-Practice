@@ -10,7 +10,7 @@ output "vnet" {
 # 📦 Resource Group - Complete details  
 output "resource_group" {
   description = "Complete resource group details"
-  value       = azurerm_resource_group.example
+  value       = azurerm_resource_group.test
 }
 
 # 📊 Subnets - All subnet details
