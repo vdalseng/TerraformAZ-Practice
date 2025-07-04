@@ -1,6 +1,6 @@
 output "vnet" {
     description = "Virtual Network"
-    value       = azurerm_virtual_network.vnet.id
+    value       = azurerm_virtual_network.vnet
 }
 
 output "subnet" {
@@ -16,7 +16,12 @@ output "private_endpoint_ips" {
     }
 }
 
-output "private_dns_zone_names" {
-  description = "Map of DNS zone keys to their full names"
-  value       = { for key, zone in azurerm_private_dns_zone.private_dns_zone : key => zone.name }
+output "private_dns_zones" {
+  description = "Private DNS zones created for private endpoints"
+  value       = azurerm_private_dns_zone.private_dns_zone
+}
+
+output "dns_zone_ids" {
+  description = "Map of DNS zone names (with dots replaced by underscores) to their IDs"
+  value = local.dns_zone_ids
 }

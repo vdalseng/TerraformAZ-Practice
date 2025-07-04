@@ -54,22 +54,21 @@ locals {
     "table_secondary"     = "privatelink.table.core.windows.net"
     "web"                 = "privatelink.web.core.windows.net"
     "web_secondary"       = "privatelink.web.core.windows.net"
-    "disks"               = "privatelink.blob.core.windows.net"     # Azure Managed Disks
-    "volumegroup"         = "privatelink.blob.core.windows.net"     # Azure Elastic SAN
-    "afs"                 = "privatelink.afs.azure.net"             # Azure File Sync
+    "disks"               = "privatelink.blob.core.windows.net"
+    "volumegroup"         = "privatelink.blob.core.windows.net"
+    "afs"                 = "privatelink.afs.azure.net"
     
     # ==========================================
     # DATABASE SERVICES
     # ==========================================
     "sqlServer"           = "privatelink.database.windows.net"
-    "managedInstance"     = "privatelink.database.windows.net"     # Simplified (region substitution handled elsewhere)
+    "managedInstance"     = "privatelink.database.windows.net"
     "postgresqlServer"    = "privatelink.postgres.database.azure.com"
     "mysqlServer"         = "privatelink.mysql.database.azure.com"
     "mariadbServer"       = "privatelink.mariadb.database.azure.com"
     "redisCache"          = "privatelink.redis.cache.windows.net"
     "redisEnterprise"     = "privatelink.redisenterprise.cache.azure.net"
     
-    # Cosmos DB subresources (exact Microsoft names - note capitalization)
     "Sql"                 = "privatelink.documents.azure.com"
     "MongoDB"             = "privatelink.mongo.cosmos.azure.com"
     "Cassandra"           = "privatelink.cassandra.cosmos.azure.com"
@@ -83,29 +82,28 @@ locals {
     # ==========================================
     "vault"               = "privatelink.vaultcore.azure.net"
     "managedhsm"          = "privatelink.managedhsm.azure.net"
-    "configurationStores" = "privatelink.azconfig.io"               # App Configuration
-    "standard"            = "privatelink.attest.azure.net"          # Azure Attestation
+    "configurationStores" = "privatelink.azconfig.io"
+    "standard"            = "privatelink.attest.azure.net"
     
     # ==========================================
     # COMPUTE & WEB SERVICES  
     # ==========================================
-    "sites"               = "privatelink.azurewebsites.net"         # App Service, Functions
-    "registry"            = "privatelink.azurecr.io"                # Container Registry
-    "staticSites"         = "privatelink.azurestaticapps.net"       # Static Web Apps
-    "searchService"       = "privatelink.search.windows.net"        # Azure Search
-    "batchAccount"        = "privatelink.batch.azure.com"           # Simplified
-    "nodeManagement"      = "privatelink.batch.azure.com"           # Simplified
+    "sites"               = "privatelink.azurewebsites.net"
+    "registry"            = "privatelink.azurecr.io"
+    "staticSites"         = "privatelink.azurestaticapps.net"
+    "searchService"       = "privatelink.search.windows.net"
+    "batchAccount"        = "privatelink.batch.azure.com"
+    "nodeManagement"      = "privatelink.batch.azure.com"
     
     # ==========================================
     # MESSAGING & INTEGRATION
     # ==========================================
-    "namespace"           = "privatelink.servicebus.windows.net"    # Service Bus, Event Hubs, Relay
-    "topic"               = "privatelink.eventgrid.azure.net"       # Event Grid Topic
-    "domain"              = "privatelink.eventgrid.azure.net"       # Event Grid Domain
-    "partnernamespace"    = "privatelink.eventgrid.azure.net"       # Event Grid Partner Namespace
-    "topicSpace"          = "privatelink.ts.eventgrid.azure.net"    # Event Grid Namespace Topic Space
+    "namespace"           = "privatelink.servicebus.windows.net"
+    "topic"               = "privatelink.eventgrid.azure.net"
+    "domain"              = "privatelink.eventgrid.azure.net"
+    "partnernamespace"    = "privatelink.eventgrid.azure.net"
+    "topicSpace"          = "privatelink.ts.eventgrid.azure.net"
     
-    # API Management subresources (exact Microsoft names - note capitalization)
     "Gateway"             = "privatelink.azure-api.net"
     "Management"          = "privatelink.azure-api.net"
     "Portal"              = "privatelink.azure-api.net"
@@ -114,9 +112,6 @@ locals {
     # ==========================================
     # AI & MACHINE LEARNING
     # ==========================================
-    # NOTE: "account" subresource is handled by smart resolution in main.tf
-    # - Microsoft.CognitiveServices/accounts → privatelink.cognitiveservices.azure.com
-    # - Microsoft.Purview/accounts → privatelink.purview.azure.com
     "amlworkspace"        = "privatelink.api.azureml.ms"
     
     # ==========================================
@@ -124,38 +119,38 @@ locals {
     # ==========================================
     "iotHub"              = "privatelink.azure-devices.net"
     "iotDps"              = "privatelink.azure-devices-provisioning.net"
-    "iotApp"              = "privatelink.azureiotcentral.com"        # IoT Central
-    "API"                 = "privatelink.digitaltwins.azure.net"     # Digital Twins
-    "DeviceUpdate"        = "privatelink.api.adu.microsoft.com"      # Device Update for IoT
+    "iotApp"              = "privatelink.azureiotcentral.com"
+    "API"                 = "privatelink.digitaltwins.azure.net"
+    "DeviceUpdate"        = "privatelink.api.adu.microsoft.com"
     
     # ==========================================
     # ANALYTICS & DATA
     # ==========================================
-    "Sql"                 = "privatelink.sql.azuresynapse.net"      # Synapse Analytics SQL
-    "SqlOnDemand"         = "privatelink.sql.azuresynapse.net"      # Synapse Analytics SQL On-Demand
-    "Dev"                 = "privatelink.dev.azuresynapse.net"      # Synapse Analytics Dev
-    "Web"                 = "privatelink.azuresynapse.net"          # Synapse Studio
-    "dataFactory"         = "privatelink.datafactory.azure.net"    # Data Factory
-    "portal"              = "privatelink.adf.azure.com"            # Data Factory Portal
-    "cluster"             = "privatelink.kusto.windows.net"        # Data Explorer (simplified)
-    "gateway"             = "privatelink.azurehdinsight.net"       # HDInsight
-    "headnode"            = "privatelink.azurehdinsight.net"       # HDInsight
-    "databricks_ui_api"   = "privatelink.azuredatabricks.net"      # Databricks
-    "browser_authentication" = "privatelink.azuredatabricks.net"   # Databricks
-    "tenant"              = "privatelink.analysis.windows.net"     # Power BI
+    "Sql"                 = "privatelink.sql.azuresynapse.net"
+    "SqlOnDemand"         = "privatelink.sql.azuresynapse.net"
+    "Dev"                 = "privatelink.dev.azuresynapse.net"
+    "Web"                 = "privatelink.azuresynapse.net"
+    "dataFactory"         = "privatelink.datafactory.azure.net"
+    "portal"              = "privatelink.adf.azure.com"
+    "cluster"             = "privatelink.kusto.windows.net"
+    "gateway"             = "privatelink.azurehdinsight.net"
+    "headnode"            = "privatelink.azurehdinsight.net"
+    "databricks_ui_api"   = "privatelink.azuredatabricks.net"
+    "browser_authentication" = "privatelink.azuredatabricks.net"
+    "tenant"              = "privatelink.analysis.windows.net"
     
     # ==========================================
     # MONITORING & MANAGEMENT
     # ==========================================
     "azuremonitor"        = "privatelink.monitor.azure.com"
-    "Webhook"             = "privatelink.azure-automation.net"     # Automation
-    "DSCAndHybridWorker"  = "privatelink.azure-automation.net"     # Automation
-    "AzureBackup"         = "privatelink.backup.windowsazure.com"  # Simplified
-    "AzureBackup_secondary" = "privatelink.backup.windowsazure.com" # Simplified
+    "Webhook"             = "privatelink.azure-automation.net"
+    "DSCAndHybridWorker"  = "privatelink.azure-automation.net"
+    "AzureBackup"         = "privatelink.backup.windowsazure.com"
+    "AzureBackup_secondary" = "privatelink.backup.windowsazure.com"
     "AzureSiteRecovery"   = "privatelink.siterecovery.windowsazure.com"
-    "Default"             = "privatelink.prod.migration.windowsazure.com"  # Azure Migrate
-    "ResourceManagement"  = "privatelink.azure.com"               # ARM
-    "grafana"             = "privatelink.grafana.azure.com"        # Managed Grafana
+    "Default"             = "privatelink.prod.migration.windowsazure.com"
+    "ResourceManagement"  = "privatelink.azure.com"
+    "grafana"             = "privatelink.grafana.azure.com"
     
     # ==========================================
     # MEDIA & CONTENT DELIVERY
@@ -169,12 +164,12 @@ locals {
     # ==========================================
     # OTHER SERVICES
     # ==========================================
-    "hybridcompute"       = "privatelink.his.arc.azure.com"        # Azure Arc
+    "hybridcompute"       = "privatelink.his.arc.azure.com"
     "Bot"                 = "privatelink.directline.botframework.com"
     "Token"               = "privatelink.token.botframework.com"
-    "global"              = "privatelink-global.wvd.microsoft.com" # Azure Virtual Desktop
-    "feed"                = "privatelink.wvd.microsoft.com"        # Azure Virtual Desktop
-    "connection"          = "privatelink.wvd.microsoft.com"        # Azure Virtual Desktop
-    "healthcareworkspace" = "privatelink.azurehealthcareapis.com"  # Health Data Services
+    "global"              = "privatelink-global.wvd.microsoft.com"
+    "feed"                = "privatelink.wvd.microsoft.com"
+    "connection"          = "privatelink.wvd.microsoft.com"
+    "healthcareworkspace" = "privatelink.azurehealthcareapis.com"
   }
 }

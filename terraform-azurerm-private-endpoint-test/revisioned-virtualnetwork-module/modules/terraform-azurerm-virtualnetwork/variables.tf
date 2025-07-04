@@ -102,24 +102,14 @@ variable "private_endpoint_configs" {
   default = {}
 }
 
-# Enhanced VNet peering configuration - support for multiple peering connections
-variable "vnet_peering_configs" {
-  description = "Map of VNet peering configurations for multiple connections. Each key is a unique identifier."
-  type = map(object({
-    remote_vnet_name = string
-    remote_rg_name   = string
-    bidirectional    = optional(bool, false)
+variable "create_dns_zones" {
+  description = "Whether this module instance should create DNS zones. Set to false if another instance will create them."
+  type        = bool
+  default     = true
+}
 
-    # DNS forwarding configuration
-    dns_forwarding = optional(object({
-      enabled                 = optional(bool, true)
-      import_remote_dns_zones = optional(bool, true) # Link to remote VNet's DNS zones
-      export_local_dns_zones  = optional(bool, false) # Allow remote VNet to link to your zones
-
-      # Optional: Specific zones to import/export (if empty, imports all compatible zones)
-      specific_zones_to_import = optional(list(string), [])
-      specific_zones_to_export = optional(list(string), [])
-    }), {})
-  }))
-  default = null
+variable "shared_dns_zone_ids" {
+  description = "Map of shared DNS zone IDs from other module instances. Key should match the zone name with dots replaced by underscores."
+  type        = map(string)
+  default     = {}
 }
