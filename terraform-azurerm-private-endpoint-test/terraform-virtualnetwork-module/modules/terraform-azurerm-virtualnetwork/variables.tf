@@ -91,9 +91,9 @@ variable "ddos_protection_plan_id" {
 variable "private_endpoint_configs" {
   description = "Map of private endpoint configurations. Key is used as identifier. Only essential inputs required - names and connections are auto-generated."
   type = map(object({
-    subnet_name         = string       # Name of the subnet where PE will be created
-    resource_id         = string       # ID of the resource to connect to
-    subresource_names   = list(string) # Subresource types (e.g., ["blob"], ["vault"])
+    subnet_name         = string
+    resource_id         = string
+    subresource_names   = list(string)
     private_dns_zone_group = optional(object({
       name                 = string
       private_dns_zone_ids = list(string)

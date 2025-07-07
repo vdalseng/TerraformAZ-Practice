@@ -1,19 +1,38 @@
 locals {
   standard_name = var.name_override != "" ? var.name_override : "${var.system_name}-${var.environment}"
+  vnet          = concat(azurerm_virtual_network.vnet.*, [null])[0]
+  subnet        = concat(azurerm_subnet.subnet.*, [null])
+  subnet_count  = length(azurerm_subnet.subnet)
   
-  # Automatically determine DNS zones needed for private endpoints
-  auto_dns_zones = {
-    for zone_name in toset(flatten([
-      for pe_key, pe_config in var.private_endpoint_configs : [
-        for subresource in pe_config.subresource_names :
-        lookup(local.service_dns_zones, subresource, null)
-        if lookup(local.service_dns_zones, subresource, null) != null && pe_config.private_dns_zone_group == null
-      ]
-    ])) : replace(zone_name, ".", "_") => zone_name
+  # Merges user-defined and service-provided DNS zones from private_endpoint_configs for accurate DNS resolution.
+  # Ensures each private endpoint config has a complete DNS zone mapping.
+  custom_dns_mappings = merge([
+    for pe_key, pe_config in var.private_endpoint_configs : {
+      for idx, subresource in pe_config.subresource_names :
+      subresource => regex("([^/]+)$", pe_config.private_dns_zone_group.private_dns_zone_ids[idx])[0]
+      if pe_config.private_dns_zone_group != null && 
+         length(try(pe_config.private_dns_zone_group.private_dns_zone_ids, [])) > idx
+    }
+  ]...)
+    
+  all_mappings = merge(local.service_dns_zones, local.custom_dns_mappings)
+  
+  auto_zones = toset(flatten([
+    for pe_key, pe_config in var.private_endpoint_configs : [
+      for subresource in pe_config.subresource_names :
+      lookup(local.all_mappings, subresource, null)
+      if lookup(local.all_mappings, subresource, null) != null && 
+          pe_config.private_dns_zone_group == null
+    ]
+  ]))
+  
+  standardized_zone_names = {
+    for zone_name in local.auto_zones :
+    replace(zone_name, ".", "_") => zone_name
   }
   
   # Only create DNS zones if create_dns_zones is true
-  dns_zones_to_create = var.create_dns_zones ? local.auto_dns_zones : {}
+  dns_zones_to_create = var.create_dns_zones ? local.standardized_zone_names : {}
   
   # Use either created DNS zones or shared ones
   dns_zone_ids = merge(
@@ -48,6 +67,29 @@ resource "azurerm_subnet" "subnet" {
   private_endpoint_network_policies = var.private_endpoint_network_policies
 }
 
+resource "vault_generic_secret" "kv_info" {
+  path      = "${var.system_name}/kv/info/vnet/${var.vnet_canonical_name}"
+  data_json = <<EOT
+{
+  "vnet-id":   "${azurerm_virtual_network.vnet.id}",
+  "secret-path": "${var.system_name}/kv/vnet/${var.vnet_canonical_name}",
+  "vnet-name": "${azurerm_virtual_network.vnet.name}",
+  "vnet-location": "${azurerm_virtual_network.vnet.location}"
+}
+EOT
+
+}
+
+resource "vault_generic_secret" "kv_secret" {
+  for_each  = azurerm_subnet.subnet
+  path      = "${var.system_name}/kv/subnet/${each.key}"
+  data_json = <<EOT
+{
+  "vnet-subnets": "${each.value.id}"
+}
+EOT
+
+}
 
 ####### Private Endpoint
 resource "azurerm_private_endpoint" "private_endpoint" {
@@ -71,8 +113,8 @@ resource "azurerm_private_endpoint" "private_endpoint" {
       name = "${local.standard_name}-${each.key}-dns-group"
       private_dns_zone_ids = [
         for subresource in each.value.subresource_names :
-        local.dns_zone_ids[replace(lookup(local.service_dns_zones, subresource, ""), ".", "_")]
-        if lookup(local.service_dns_zones, subresource, null) != null
+        local.dns_zone_ids[replace(lookup(merge(local.service_dns_zones, local.all_mappings), subresource, ""), ".", "_")]
+      if lookup(merge(local.service_dns_zones, local.all_mappings), subresource, null) != null
       ]
     }
   }
@@ -95,8 +137,9 @@ resource "azurerm_private_dns_zone" "private_dns_zone" {
   tags                = var.tags
 }
 
+# VNet links for locally created DNS zones
 resource "azurerm_private_dns_zone_virtual_network_link" "vnet_dns_links" {
-  for_each = local.auto_dns_zones
+  for_each = local.dns_zones_to_create
 
   name                  = "${local.standard_name}-${each.key}-link"
   resource_group_name   = var.resource_group.name

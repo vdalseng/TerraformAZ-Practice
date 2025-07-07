@@ -2,7 +2,7 @@
 
 ## Overview
 
-This module creates secure Azure virtual networks with **private networking by default**. It automatically configures private endpoints and DNS zones to keep your Azure services (Storage, Key Vault, etc.) accessible only within your VNet, eliminating exposure to the public internet while maintaining the flexibility to enable public access when needed.
+This module creates secure Azure virtual networks with **private networking by default**. It automatically configures private endpoints and DNS zones when enabled to do so to keep your Azure services accessible only within your VNet, eliminating exposure to the public internet while maintaining the flexibility to enable public access when needed.
 
 ## Table of Contents
 
@@ -42,15 +42,15 @@ This module focuses on **core private networking** and integrates well with othe
 
 ## What this module contains
 
-| Network Resources | Purpose | Optional | Default |
+| Network Resources | Purpose | Optional | What Happens When Not Configured |
 |:----------|:----------|:----------|:----------|
-| 🌐 **Virtual Network** | Creates an isolated network foundation with custom address space | ❌ | User defined |
-| 📶 **Subnets** | Creates subnets for organizing resources (workloads, endpoints, services) | ✅ | None |
-| 🛡️ **NSG** | Network Security Groups with customizable inbound/outbound rules | ✅ | No rules |
-| 🔒 **Private Endpoints** | Secure private connectivity to Azure services (Storage, Key Vault, etc.) | ✅ | None |
-| 📡 **Private DNS Zones** | Auto-discovers and creates DNS zones for private endpoint resolution | ✅ | Auto-created when enabled |
-| 🔗 **DNS Zone Links** | Links private DNS zones to VNet for internal name resolution | ✅ | Auto-created with DNS zones |
-| 🌍 **Shared DNS Support** | Option to use existing DNS zones across multiple VNets | ✅ | Create new zones |
+| 🌐 **Virtual Network** | Creates an isolated network foundation with custom address space | ❌ | **Required** - Module will fail without this |
+| 📶 **Subnets** | Creates subnets for organizing resources (workloads, endpoints, services) | ✅ | VNet created with no subnets |
+| 🛡️ **NSG** | Network Security Groups with customizable inbound/outbound rules | ✅ | Empty NSGs (allow all internal traffic) |
+| 🔒 **Private Endpoints** | Secure private connectivity to Azure services (Storage Accounts, CosmosDB, App Service, Key Vault etc.) | ✅ | VNet has no private connectivity to Azure services |
+| 📡 **Private DNS Zones** | Auto-discovers and creates DNS zones for private endpoint resolution | ✅ | No DNS zones created if `create_dns_zones = false` is provided |
+| 🔗 **DNS Zone Links** | Links private DNS zones to VNet for internal name resolution | ✅ | No DNS zone links created |
+| 🌍 **Shared DNS Support** | Option to use existing DNS zones across multiple VNets | ✅ | 	Each VNet creates its own DNS zones |
 
 ## Network Architecture Overview
 
@@ -164,7 +164,7 @@ flowchart TD
 2. **📡 DNS Resolution**: Private DNS zone resolves to private endpoint IP (10.0.2.4) instead of public IP
 3. **🔒 Private Routing**: Traffic routes through private endpoint within the VNet
 4. **🎯 Secure Access**: Private endpoint forwards traffic securely to Azure service
-5. **🛡️ No Internet**: Traffic never leaves Azure's private backbone network
+5. **🛡️ No Public Internet Exposure**: Traffic never leaves Azure's private backbone network
 
 ### Multi-VNet Shared DNS Example:
 
@@ -232,14 +232,12 @@ flowchart TD
 
 ### Input Requirements by Feature
 
-| Feature | Required Inputs | Optional Inputs |
-|:--------|:----------------|:----------------|
-| 🌐 **Virtual Network** | `address_space`<br>`system_name`<br>`environment`<br>`resource_group` | `dns_servers`<br>`ddos_protection_plan_id`<br>`tags` |
+| Feature | Required | Optional |
+|:--------|:---------|:---------|
+| 🌐 **Basic VNet** | `system_name`, `environment`, `resource_group`, `address_space` | `dns_servers`, `tags` |
 | 📶 **Subnets** | `subnet_configs` | `private_endpoint_network_policies` |
-| 🛡️ **NSG Rules** | `nsg_rules`<br>`nsg_attached_subnets` | - |
-| 🔒 **Private Endpoints** | `private_endpoint_configs`<br>└ `subnet_name`<br>└ `resource_id`<br>└ `subresource_names` | `private_dns_zone_group` |
-| 📡 **Auto DNS Zones** | `create_dns_zones = true`<br>`private_endpoint_configs` | - |
-| 🌍 **Shared DNS Zones** | `create_dns_zones = false`<br>`shared_dns_zone_ids` | - |
+| 🔒 **Private Endpoints** | `private_endpoint_configs`, `create_dns_zones = true` | `private_dns_zone_group` |
+| 🌍 **Shared DNS** | `create_dns_zones = false`, `shared_dns_zone_ids` | - |
 
 ### Complete Working Example
 ```terraform
@@ -266,14 +264,18 @@ module "vnet" {
   environment         = "dev"
   resource_group      = azurerm_resource_group.example
   address_space       = ["10.0.0.0/16"]
+  dns_servers         = []
   
   subnet_configs = {
     workloads = cidrsubnet("10.0.0.0/16", 8, 1)
     endpoints = cidrsubnet("10.0.0.0/16", 8, 2)
   }
+
+  nsg_attached_subnets = []
   
   create_dns_zones = true
   
+  # Automatic DNS zone creation for PE
   private_endpoint_configs = {
     storage_blob = {
       subnet_name       = "endpoints"
@@ -281,12 +283,29 @@ module "vnet" {
       subresource_names = ["blob"]
     }
   }
+
+  # Manual DNS zone creation for PE
+  private_endpoint_configs = {
+    some_service = {
+      subnet_name       = "endpoints"
+      resource_id       = azurerm_storage_account.example.id
+      subresource_names = ["customSubresource"]
+
+      private_dns_zone_group = {
+        name = "custom-service-dns"
+        private_dns_zone_ids = [
+          "privatelink.yourService.example.com"
+        ]
+      }
+    }
+  }
 }
 ```
 
 ## Supported Azure Services
 
-This module auto-discovers DNS zones for supported Azure services. For a complete list of supported subresources and their corresponding DNS zones, see [`azure_private_link_zones.tf`](./azure_private_link_zones.tf).
+This module auto-discovers DNS zones for supported Azure services. For a complete list of supported subresources and their corresponding DNS zones, see [`azure_private_link_zones.tf`](./azure_private_link_zones.tf). <br>
+If your Azure Service is not listed in the terraform document, you can find the correct DNS zone value on [`learn.microsoft.com/private-endpoint-dns`](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns) and manually pass the correct DNS zone through the DNS config variable.
 
 **Common supported services include:**
 - Storage (blob, file, queue, table, dfs)
