@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "example" {
 module "vnet" {
   source = "./modules/terraform-azurerm-virtualnetwork"
   
-  vnet_canonical_name = "my-vnet"
+  vnet_canonical_name = "${var.system_name}-basic"
   system_name         = "example"
   environment         = "dev"
   resource_group      = azurerm_resource_group.example

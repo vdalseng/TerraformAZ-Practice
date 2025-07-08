@@ -7,7 +7,7 @@ data "azurerm_storage_account" "team_a_storage" {
   resource_group_name = "rg-team-a-resources"
 }
 
-# Data source for shared DNS zones (if teams want to share DNS management)
+# Data source for shared DNS zones
 data "azurerm_private_dns_zone" "shared_blob_zone" {
   name                = "privatelink.blob.core.windows.net"
   resource_group_name = "rg-team-a-dns"
@@ -70,7 +70,7 @@ resource "azurerm_key_vault" "kv" {
 module "vnet" {
   source = "../modules/terraform-azurerm-virtualnetwork"
   
-  vnet_canonical_name = "advanced-vnet"
+  vnet_canonical_name = "${var.system_name}-basic"
   system_name         = "advanced"
   environment         = "dev"
   resource_group      = azurerm_resource_group.advanced
@@ -149,14 +149,14 @@ module "vnet" {
       
       # Manual DNS zone group for services not in service_dns_zones mapping
       private_dns_zone_group = {
-        name = "keyvault-manual-dns-group"
+        name = "example-dns-group-name"
         private_dns_zone_ids = [
           "privatelink.vaultcore.azure.net"
         ]
       }
     }
     
-    # Shared resources from other teams (using data sources)
+    # Shared resources from other teams
     shared_team_a_storage = {
       subnet_name       = "endpoints"
       resource_id       = data.azurerm_storage_account.team_a_storage.id
@@ -164,7 +164,6 @@ module "vnet" {
     }
   }
   
-  # Shared DNS zones - using data source for shared DNS management
   shared_dns_zone_ids = {
     privatelink_blob_core_windows_net = data.azurerm_private_dns_zone.shared_blob_zone.id
   }

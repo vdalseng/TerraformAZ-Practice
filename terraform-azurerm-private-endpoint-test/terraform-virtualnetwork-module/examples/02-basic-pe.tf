@@ -21,7 +21,7 @@ resource "azurerm_storage_account" "example" {
 module "vnet" {
   source = "../modules/terraform-azurerm-virtualnetwork"
   
-  vnet_canonical_name = "pe-vnet"
+  vnet_canonical_name = "${var.system_name}-basic"
   system_name         = "example"
   environment         = "dev"
   resource_group      = azurerm_resource_group.example
