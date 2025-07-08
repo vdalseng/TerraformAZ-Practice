@@ -140,7 +140,7 @@ resource "azurerm_storage_account" "application" {
   }
 }
 
-# Key Vault
+# For the Key Vault shared resource
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "shared" {
