@@ -20,5 +20,4 @@ data "azurerm_client_config" "current" {}
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
-  default     = "4d44263b-1bf2-4919-9046-1a108c92b127"
 }
